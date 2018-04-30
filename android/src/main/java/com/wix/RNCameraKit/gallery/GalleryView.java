@@ -4,8 +4,10 @@ import android.content.Context;
 import android.graphics.Rect;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 
 public class GalleryView extends RecyclerView {
 
@@ -23,10 +25,45 @@ public class GalleryView extends RecyclerView {
                 Log.e("WIX", "IOOBE in RecyclerView");
             }
         }
+
+        @Override
+        public RecyclerView.LayoutParams generateDefaultLayoutParams() {
+            return spanLayoutSize(super.generateDefaultLayoutParams());
+        }
+
+        @Override
+        public RecyclerView.LayoutParams generateLayoutParams(Context c, AttributeSet attrs) {
+            return spanLayoutSize(super.generateLayoutParams(c, attrs));
+        }
+
+        @Override
+        public RecyclerView.LayoutParams generateLayoutParams(ViewGroup.LayoutParams lp) {
+            return spanLayoutSize(super.generateLayoutParams(lp));
+        }
+
+        private RecyclerView.LayoutParams spanLayoutSize(RecyclerView.LayoutParams layoutParams){
+            if(getOrientation() == HORIZONTAL){
+                layoutParams.width = (int) Math.round(getHorizontalSpace() / Math.ceil(getItemCount() / getSpanCount()));
+            }
+            else if(getOrientation() == VERTICAL){
+                layoutParams.height = (int) Math.round(getVerticalSpace() / Math.ceil(getItemCount() / getSpanCount()));
+            }
+            return layoutParams;
+        }
+
+        private int getHorizontalSpace() {
+            return getWidth() - getPaddingRight() - getPaddingLeft();
+        }
+
+        private int getVerticalSpace() {
+            return getHeight() - getPaddingBottom() - getPaddingTop();
+        }
     }
 
     private int itemSpacing;
     private int lineSpacing;
+    private boolean isHorizontal;
+    private int columnCount;
 
     public GalleryView(Context context) {
         super(context);
@@ -51,6 +88,11 @@ public class GalleryView extends RecyclerView {
         updateDecorator();
     }
 
+    public void setIsHorizontal(boolean isHorizontal) {
+        this.isHorizontal = isHorizontal;
+
+    }
+
     public void setLineSpacing(int lineSpacing) {
         this.lineSpacing = lineSpacing;
         updateDecorator();
@@ -59,7 +101,7 @@ public class GalleryView extends RecyclerView {
     public void setColumnCount(int columnCount) {
         if (getLayoutManager() == null || ((GridLayoutViewManagerWrapper) getLayoutManager()).getSpanCount() != columnCount) {
             GridLayoutManager layoutManager = new GridLayoutViewManagerWrapper(getContext(), columnCount);
-            layoutManager.setOrientation(GridLayoutManager.VERTICAL);
+            layoutManager.setOrientation(GridLayoutManager.HORIZONTAL);
             setLayoutManager(layoutManager);
         }
     }
