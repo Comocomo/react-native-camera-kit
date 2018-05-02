@@ -101,7 +101,7 @@ public class GalleryView extends RecyclerView {
     public void setColumnCount(int columnCount) {
         if (getLayoutManager() == null || ((GridLayoutViewManagerWrapper) getLayoutManager()).getSpanCount() != columnCount) {
             GridLayoutManager layoutManager = new GridLayoutViewManagerWrapper(getContext(), columnCount);
-            layoutManager.setOrientation(GridLayoutManager.HORIZONTAL);
+            layoutManager.setOrientation(GridLayoutManager.VERTICAL);
             setLayoutManager(layoutManager);
         }
     }
