@@ -527,44 +527,41 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
                 imageData = UIImageJPEGRepresentation(capturedImage, 0.85f);
                 
                 [PHPhotoLibrary requestAuthorization:^( PHAuthorizationStatus status ) {
-                    if ( status == PHAuthorizationStatusAuthorized ) {
+                    NSMutableDictionary *imageInfoDict = [[NSMutableDictionary alloc] init];
+                    
+                    NSURL *temporaryFileURL = [CKCamera saveToTmpFolder:imageData];
+                    if (temporaryFileURL) {
+                        imageInfoDict[@"uri"] = temporaryFileURL.description;
+                        imageInfoDict[@"name"] = temporaryFileURL.lastPathComponent;
+                    }
+                    imageInfoDict[@"size"] = [NSNumber numberWithInteger:imageData.length];
+                    
+                    if (capturedImage && [capturedImage isKindOfClass:[UIImage class]]) {
+                        imageInfoDict[@"width"] = [NSNumber numberWithDouble:capturedImage.size.width];
+                        imageInfoDict[@"height"] = [NSNumber numberWithDouble:capturedImage.size.height];
+                    }
+                    
+                    if ( status == PHAuthorizationStatusAuthorized && shouldSaveToCameraRoll ) {
+                        NSData *compressedImageData = UIImageJPEGRepresentation(capturedImage, 1.0f);
                         
-                        NSMutableDictionary *imageInfoDict = [[NSMutableDictionary alloc] init];
-                        
-                        NSURL *temporaryFileURL = [CKCamera saveToTmpFolder:imageData];
-                        if (temporaryFileURL) {
-                            imageInfoDict[@"uri"] = temporaryFileURL.description;
-                            imageInfoDict[@"name"] = temporaryFileURL.lastPathComponent;
-                        }
-                        imageInfoDict[@"size"] = [NSNumber numberWithInteger:imageData.length];
-                        
-                        if (capturedImage && [capturedImage isKindOfClass:[UIImage class]]) {
-                            imageInfoDict[@"width"] = [NSNumber numberWithDouble:capturedImage.size.width];
-                            imageInfoDict[@"height"] = [NSNumber numberWithDouble:capturedImage.size.height];
-                        }
-                        
-                        
-                        if (shouldSaveToCameraRoll) {
-                            NSData *compressedImageData = UIImageJPEGRepresentation(capturedImage, 1.0f);
-                            
-                            [CKGalleryManager saveImageToCameraRoll:compressedImageData temporaryFileURL:temporaryFileURL block:^(BOOL success) {
-                                if (success) {
-                                    NSString *localIdentifier = [CKGalleryManager getImageLocalIdentifierForFetchOptions:self.fetchOptions];
-                                    if (localIdentifier) {
-                                        imageInfoDict[@"id"] = localIdentifier;
-                                    }
-                                    
-                                    if (block) {
-                                        block(imageInfoDict);
-                                    }
+                        [CKGalleryManager saveImageToCameraRoll:compressedImageData temporaryFileURL:temporaryFileURL block:^(BOOL success) {
+                            if (success) {
+                                NSString *localIdentifier = [CKGalleryManager getImageLocalIdentifierForFetchOptions:self.fetchOptions];
+                                if (localIdentifier) {
+                                    imageInfoDict[@"id"] = localIdentifier;
                                 }
-                                else {
-                                    //NSLog( @"Could not save to camera roll");
+                                
+                                if (block) {
+                                    block(imageInfoDict);
                                 }
-                            }];
-                        } else if (block) {
-                            block(imageInfoDict);
-                        }
+                            }
+                            else {
+                                //NSLog( @"Could not save to camera roll");
+                            }
+                        }];
+                    }
+                    else if (block) {
+                        block(imageInfoDict);
                     }
                 }];
                 
