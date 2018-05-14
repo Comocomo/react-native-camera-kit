@@ -109,8 +109,18 @@ public class SaveImageTask extends AsyncTask<byte[], Void, Void> {
         }
 
         WritableMap imageInfo = saveToCameraRoll ? saveToMediaStore(image) : saveTempImageFile(image);
-        if (imageInfo == null)
+        if (imageInfo == null) {
             promise.reject("CameraKit", "failed to save image to MediaStore");
+            imageInfo = saveTempImageFile(image);
+
+            if (imageInfo == null) {
+                promise.reject("CameraKit", "failed to save image to temp file");
+            }
+            else {
+                promise.resolve(imageInfo);
+                CameraViewManager.reconnect();
+            }
+        }
         else {
             promise.resolve(imageInfo);
             CameraViewManager.reconnect();
