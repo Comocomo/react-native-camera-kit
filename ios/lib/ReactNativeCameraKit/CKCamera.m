@@ -574,18 +574,36 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
     } );
 }
 
+static inline double radians (double degrees) {return degrees * M_PI/180;}
+
 +(UIImage*)rotateImage:(UIImage*)originalImage {
     
     if (originalImage.imageOrientation == UIImageOrientationUp || originalImage == nil)
         return originalImage;
     
+    UIDeviceOrientation orientation = [UIDevice currentDevice].orientation;
     
-    UIGraphicsBeginImageContextWithOptions(originalImage.size, NO, originalImage.scale);
+    CGSize size = originalImage.size;
+    UIGraphicsBeginImageContext(originalImage.size);
     
-    [originalImage drawInRect:(CGRect){0, 0, originalImage.size}];
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextTranslateCTM( context, 0.5f * size.width, 0.5f * size.height ) ;
+    
+    if (orientation == UIDeviceOrientationLandscapeRight) {
+        CGContextRotateCTM (context, radians(90));
+    } else if (orientation == UIDeviceOrientationLandscapeLeft) {
+        CGContextRotateCTM (context, radians(-90));
+    } else if (orientation == UIDeviceOrientationPortrait) {
+        // NOTHING
+    } else if (orientation == UIDeviceOrientationPortraitUpsideDown) {
+        CGContextRotateCTM (context, radians(180));
+    }
+    
+    [originalImage drawInRect:(CGRect){{ -size.width * 0.5f, -size.height * 0.5f }, size}];
     UIImage *normalizedImage =  UIGraphicsGetImageFromCurrentImageContext();
     
     UIGraphicsEndImageContext();
+    
     
     return normalizedImage;
 }
