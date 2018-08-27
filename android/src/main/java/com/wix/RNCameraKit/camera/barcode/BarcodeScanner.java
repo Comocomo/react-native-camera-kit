@@ -1,145 +1,122 @@
 package com.wix.RNCameraKit.camera.barcode;
 
-
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.hardware.Camera;
-import android.os.Handler;
-import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.ColorInt;
 import android.util.Log;
+import android.view.View;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.DecodeHintType;
-import com.google.zxing.LuminanceSource;
-import com.google.zxing.MultiFormatReader;
-import com.google.zxing.ReaderException;
-import com.google.zxing.Result;
-import com.google.zxing.common.HybridBinarizer;
-import com.wix.RNCameraKit.camera.CameraViewManager;
+import com.wix.RNCameraKit.R;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import static android.content.ContentValues.TAG;
 
-public class BarcodeScanner {
+public class BarcodeFrame extends View {
 
-    public interface ResultHandler {
-        void handleResult(Result result);
+    private static final int STROKE_WIDTH = 5;
+    private static final int ANIMATION_SPEED = 8;
+    private static final int WIDTH_SCALE = 7;
+    private static final double HEIGHT_SCALE = 2.75;
+
+    private Paint dimPaint;
+    private Paint framePaint;
+    private Paint borderPaint;
+    private Paint laserPaint;
+    private Rect frameRect;
+    private int width;
+    private int height;
+    private int frameHeight = 0;
+    private int offsetFrame = -1;
+    private int borderMargin;
+
+    private long previousFrameTime = System.currentTimeMillis();
+    private int laserY;
+
+    public BarcodeFrame(Context context) {
+        super(context);
+        init(context);
     }
 
-    private MultiFormatReader mMultiFormatReader;
-    private static final List<BarcodeFormat> ALL_FORMATS = new ArrayList<>();
-    private ResultHandler resultHandler;
+    private void init(Context context) {
+        framePaint = new Paint();
+        framePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+        dimPaint = new Paint();
+        dimPaint.setStyle(Paint.Style.FILL);
+        dimPaint.setColor(context.getResources().getColor(R.color.bg_dark));
+        borderPaint = new Paint();
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(STROKE_WIDTH);
+        laserPaint = new Paint();
+        laserPaint.setStyle(Paint.Style.STROKE);
+        laserPaint.setStrokeWidth(STROKE_WIDTH);
 
-    private Camera.PreviewCallback previewCallback;
-
-    static {
-        ALL_FORMATS.add(BarcodeFormat.AZTEC);
-        ALL_FORMATS.add(BarcodeFormat.CODABAR);
-        ALL_FORMATS.add(BarcodeFormat.CODE_39);
-        ALL_FORMATS.add(BarcodeFormat.CODE_93);
-        ALL_FORMATS.add(BarcodeFormat.CODE_128);
-        ALL_FORMATS.add(BarcodeFormat.DATA_MATRIX);
-        ALL_FORMATS.add(BarcodeFormat.EAN_8);
-        ALL_FORMATS.add(BarcodeFormat.EAN_13);
-        ALL_FORMATS.add(BarcodeFormat.ITF);
-        ALL_FORMATS.add(BarcodeFormat.MAXICODE);
-        ALL_FORMATS.add(BarcodeFormat.PDF_417);
-        ALL_FORMATS.add(BarcodeFormat.QR_CODE);
-        ALL_FORMATS.add(BarcodeFormat.RSS_14);
-        ALL_FORMATS.add(BarcodeFormat.RSS_EXPANDED);
-        ALL_FORMATS.add(BarcodeFormat.UPC_A);
-        ALL_FORMATS.add(BarcodeFormat.UPC_E);
-        ALL_FORMATS.add(BarcodeFormat.UPC_EAN_EXTENSION);
+        frameRect = new Rect();
+        borderMargin = context.getResources().getDimensionPixelSize(R.dimen.border_length);
     }
 
-    public BarcodeScanner(@NonNull Camera.PreviewCallback previewCallback, @NonNull ResultHandler resultHandler) {
-        Map<DecodeHintType, Object> hints = new EnumMap<>(DecodeHintType.class);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, ALL_FORMATS);
-        mMultiFormatReader = new MultiFormatReader();
-        mMultiFormatReader.setHints(hints);
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        this.previewCallback = previewCallback;
-        this.resultHandler = resultHandler;
+        width = getMeasuredWidth();
+        height = this.frameHeight > 0 ?  this.frameHeight  : getMeasuredHeight();
+        int marginWidth = width / WIDTH_SCALE;
+        int marginHeight = this.offsetFrame > 0 ? this.offsetFrame : (int) ( height / HEIGHT_SCALE);
+
+        frameRect.left = marginWidth;
+        frameRect.right = width - marginWidth;
+        frameRect.top =  marginHeight;
+        frameRect.bottom = height  - marginHeight;
     }
 
-    public void onPreviewFrame(byte[] data, final Camera camera) {
-        try {
-            Camera.Size size = camera.getParameters().getPreviewSize();
-            int width = size.width;
-            int height = size.height;
-
-            int tmp = width;
-            width = height;
-            height = tmp;
-            data = getRotatedData(data, camera);
-
-            final Result result = decodeResult(getLuminanceSource(data, width, height));
-
-            if (result != null) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        resultHandler.handleResult(result);
-                    }
-                });
-            }
-            camera.setOneShotPreviewCallback(previewCallback);
-        } catch (RuntimeException e) {
-            Log.w("CameraKit", e.toString());
-        }
+    @Override
+    protected void onDraw(Canvas canvas) {
+        long timeElapsed = (System.currentTimeMillis() - previousFrameTime);
+        super.onDraw(canvas);
+        canvas.drawRect(0, 0, width, height, dimPaint);
+        canvas.drawRect(frameRect, framePaint);
+        drawBorder(canvas);
+        drawLaser(canvas, timeElapsed);
+        previousFrameTime = System.currentTimeMillis();
+        this.invalidate(frameRect);
     }
 
-    @Nullable
-    private Result decodeResult(LuminanceSource source) {
-        Result rawResult = null;
-        if (source != null) {
-            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-            try {
-                rawResult = mMultiFormatReader.decodeWithState(bitmap);
-            } catch (ReaderException ignored) {
-            } finally {
-                mMultiFormatReader.reset();
-            }
-
-            if (rawResult == null && source.isRotateSupported()) {
-                LuminanceSource rotatedSource = source.rotateCounterClockwise();
-                bitmap = new BinaryBitmap(new HybridBinarizer(rotatedSource));
-                try {
-                    rawResult = mMultiFormatReader.decodeWithState(bitmap);
-                } catch (ReaderException ignored) {
-                } finally {
-                    mMultiFormatReader.reset();
-                }
-            }
-        }
-        return rawResult;
+    private void drawBorder(Canvas canvas) {
+        canvas.drawLine(frameRect.left, frameRect.top, frameRect.left, frameRect.top + borderMargin, borderPaint);
+        canvas.drawLine(frameRect.left, frameRect.top, frameRect.left + borderMargin, frameRect.top, borderPaint);
+        canvas.drawLine(frameRect.left, frameRect.bottom, frameRect.left, frameRect.bottom - borderMargin, borderPaint);
+        canvas.drawLine(frameRect.left, frameRect.bottom, frameRect.left + borderMargin, frameRect.bottom, borderPaint);
+        canvas.drawLine(frameRect.right, frameRect.top, frameRect.right - borderMargin, frameRect.top, borderPaint);
+        canvas.drawLine(frameRect.right, frameRect.top, frameRect.right, frameRect.top + borderMargin, borderPaint);
+        canvas.drawLine(frameRect.right, frameRect.bottom, frameRect.right, frameRect.bottom - borderMargin, borderPaint);
+        canvas.drawLine(frameRect.right, frameRect.bottom, frameRect.right - borderMargin, frameRect.bottom, borderPaint);
     }
 
-    private LuminanceSource getLuminanceSource(byte[] data, int width, int height) {
-        Rect rect = CameraViewManager.getFramingRectInPreview(width, height);
-        try {
-            return new RotateLuminanceSource(data, width, height, rect.left, rect.top,
-                    rect.width(), rect.height(), false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
+    private void drawLaser(Canvas canvas, long timeElapsed) {
+        if (laserY > frameRect.bottom || laserY < frameRect.top) laserY = frameRect.top;
+        canvas.drawLine(frameRect.left + STROKE_WIDTH, laserY, frameRect.right - STROKE_WIDTH, laserY, laserPaint);
+        laserY += (timeElapsed) / ANIMATION_SPEED;
     }
 
-    private byte[] getRotatedData(byte[] data, Camera camera) {
-        Camera.Size size = camera.getParameters().getPreviewSize();
-        int width = size.width;
-        int height = size.height;
+    public Rect getFrameRect() {
+        return frameRect;
+    }
 
-        byte[] rotatedData = new byte[data.length];
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++)
-                rotatedData[x * height + height - y - 1] = data[x + y * width];
-        }
-        return rotatedData;
+    public void setFrameHeight(int height) {
+        this.frameHeight = height;
+    }
+    public void setFrameOffset(int offset) {
+        this.offsetFrame = offset;
+    }
+
+    public void setFrameColor(@ColorInt int borderColor) {
+        borderPaint.setColor(borderColor);
+    }
+
+    public void setLaserColor(@ColorInt int laserColor) {
+        laserPaint.setColor(laserColor);
     }
 }

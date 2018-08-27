@@ -7,9 +7,12 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.support.annotation.ColorInt;
+import android.util.Log;
 import android.view.View;
 
 import com.wix.RNCameraKit.R;
+
+import static android.content.ContentValues.TAG;
 
 public class BarcodeFrame extends View {
 
@@ -25,6 +28,8 @@ public class BarcodeFrame extends View {
     private Rect frameRect;
     private int width;
     private int height;
+    private int frameHeight = 0;
+    private int offset = -1;
     private int borderMargin;
 
     private long previousFrameTime = System.currentTimeMillis();
@@ -57,13 +62,13 @@ public class BarcodeFrame extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         width = getMeasuredWidth();
-        height = getMeasuredHeight();
+        height = this.frameHeight > 0 ? this.frameHeight : getMeasuredHeight();
         int marginWidth = width / WIDTH_SCALE;
-        int marginHeight = (int) (height / HEIGHT_SCALE);
-
+        int marginHeight = this.offset > 0 ? this.offset : (int) (height / HEIGHT_SCALE);
+        Log.d(TAG, " " + this.frameHeight + " " + this.offset);
         frameRect.left = marginWidth;
         frameRect.right = width - marginWidth;
-        frameRect.top = marginHeight;
+        frameRect.top =  marginHeight;
         frameRect.bottom = height - marginHeight;
     }
 
@@ -98,6 +103,13 @@ public class BarcodeFrame extends View {
 
     public Rect getFrameRect() {
         return frameRect;
+    }
+
+    public void setFrameHeight(int height) {
+        this.frameHeight = height;
+    }
+    public void setFrameOffset(int offest) {
+        this.offset = offset;
     }
 
     public void setFrameColor(@ColorInt int borderColor) {

@@ -14,6 +14,7 @@ import android.view.OrientationEventListener;
 import android.view.WindowManager;
 
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.SimpleViewManager;
@@ -325,6 +326,17 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
     @ReactProp(name = "laserColor", defaultInt = Color.RED)
     public void setLaserColor(CameraView view, @ColorInt int color) {
         view.setLaserColor(color);
+    }
+
+    @ReactProp(name = "scannerOptions")
+    public void setOffsetFrame(CameraView view, ReadableMap options) {
+        if (options.hasKey("frameHeight")) {
+            view.setFrameHeight(options.getInt("frameHeight"));
+        }
+
+        if (options.hasKey("offsetFrame")) {
+            view.setOffsetFrame(options.getInt("offsetFrame"));
+        }
     }
 
     @ReactProp(name = "surfaceColor")

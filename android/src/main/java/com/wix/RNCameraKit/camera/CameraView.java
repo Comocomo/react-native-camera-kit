@@ -19,6 +19,8 @@ public class CameraView extends FrameLayout implements SurfaceHolder.Callback {
 
     private boolean showFrame;
     private Rect frameRect;
+    private int frameOffset;
+    private int frameHeight;
     private BarcodeFrame barcodeFrame;
     @ColorInt private int frameColor = Color.GREEN;
     @ColorInt private int laserColor = Color.RED;
@@ -87,6 +89,8 @@ public class CameraView extends FrameLayout implements SurfaceHolder.Callback {
             barcodeFrame = new BarcodeFrame(getContext());
             barcodeFrame.setFrameColor(frameColor);
             barcodeFrame.setLaserColor(laserColor);
+            barcodeFrame.setFrameOffset(frameOffset);
+            barcodeFrame.setFrameHeight(frameHeight);
             addView(barcodeFrame);
             requestLayout();
         }
@@ -122,6 +126,22 @@ public class CameraView extends FrameLayout implements SurfaceHolder.Callback {
             barcodeFrame.setFrameColor(color);
         }
     }
+
+    public void setFrameHeight( int height) {
+        this.frameHeight = height;
+        if (barcodeFrame != null) {
+            barcodeFrame.setFrameHeight(height);
+        }
+    }
+
+
+    public void setOffsetFrame( int offset) {
+        this.frameOffset = offset;
+        if (barcodeFrame != null) {
+            barcodeFrame.setFrameOffset(offset);
+        }
+    }
+
 
     public void setLaserColor(@ColorInt int color) {
         this.laserColor = color;
