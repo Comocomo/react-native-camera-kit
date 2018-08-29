@@ -21,6 +21,8 @@
 #import "CKCameraOverlayView.h"
 #import "CKGalleryManager.h"
 
+#import "BarcodeEventEmitter.h"
+
 static void * CapturingStillImageContext = &CapturingStillImageContext;
 static void * SessionRunningContext = &SessionRunningContext;
 
@@ -108,7 +110,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 @property (nonatomic) CKCameraZoomMode zoomMode;
 @property (nonatomic, strong) NSString* ratioOverlayString;
 @property (nonatomic, strong) UIColor *ratioOverlayColor;
-@property (nonatomic, strong) RCTDirectEventBlock onReadCode;
+@property (nonatomic, strong) RCTBubblingEventBlock onReadCode;
 
 @property (nonatomic) BOOL isAddedOberver;
 
@@ -1104,8 +1106,9 @@ didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
             AVMetadataMachineReadableCodeObject *code = (AVMetadataMachineReadableCodeObject*)[self.previewLayer transformedMetadataObjectForMetadataObject:metadataObject];
             
             if (self.onReadCode && code.stringValue && ![code.stringValue isEqualToString:self.codeStringValue]) {
-                self.onReadCode(@{@"codeStringValue": code.stringValue});
-                [self stopAnimatingScanner];
+                [BarcodeEventEmitter application:[UIApplication sharedApplication] didScanBarcode:code.stringValue];
+//                self.onReadCode(@{@"codeStringValue": code.stringValue});
+//                [self stopAnimatingScanner];
             }
         }
     }

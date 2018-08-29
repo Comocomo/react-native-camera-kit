@@ -8,11 +8,13 @@
 
 #import "CKCameraManager.h"
 #import "CKCamera.h"
+#import "BarcodeEventEmitter.h"
 
 
 @interface CKCameraManager ()
 
 @property (nonatomic, strong) CKCamera *camera;
+@property (nonatomic, strong) BarcodeEventEmitter *barcodeEventEmitter;
 
 @end
 
@@ -22,11 +24,12 @@ RCT_EXPORT_MODULE()
 
 - (UIView *)view {
     self.camera = [CKCamera new];
+    [self.barcodeEventEmitter startObserving];
     return self.camera;
 }
 
 RCT_EXPORT_VIEW_PROPERTY(cameraOptions, NSDictionary)
-RCT_EXPORT_VIEW_PROPERTY(onReadCode, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onReadCode, RCTBubblingEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(scannerOptions, NSDictionary)
 RCT_EXPORT_VIEW_PROPERTY(showFrame, BOOL)

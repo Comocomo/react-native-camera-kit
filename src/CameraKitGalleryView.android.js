@@ -34,7 +34,6 @@ export default class CameraKitGalleryView extends Component {
   render() {
     const transformedProps = _.cloneDeep(this.props);
     transformedProps.albumName = this.props.albumName ? this.props.albumName : ALL_PHOTOS;
-    transformedProps.isHorizontal = this.props.isHorizontal || false;
     if (transformedProps.fileTypeSupport && transformedProps.fileTypeSupport.unsupportedImage) {
       _.update(transformedProps, 'fileTypeSupport.unsupportedImage', (image) => resolveAssetSource(image).uri);
     }

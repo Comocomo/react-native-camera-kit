@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   NativeModules,
+  NativeEventEmitter,
   Platform,
   SafeAreaView,
   processColor  
@@ -16,7 +17,7 @@ import CameraKitCamera from './../CameraKitCamera';
 
 const IsIOS = Platform.OS === 'ios';
 const GalleryManager = IsIOS ? NativeModules.CKGalleryManager : NativeModules.NativeGalleryModule;
-
+const BarcodeEventEmitter = IsIOS ? new NativeEventEmitter(NativeModules.BarcodeEventEmitter) : undefined
 const FLASH_MODE_AUTO = 'auto';
 const FLASH_MODE_ON = 'on';
 const FLASH_MODE_OFF = 'off';
@@ -36,6 +37,7 @@ export default class CameraScreenBase extends Component {
 
   constructor(props) {
     super(props);
+
     this.currentFlashArrayPosition = 0;
     this.flashArray = [{
       mode: FLASH_MODE_AUTO,
@@ -50,6 +52,7 @@ export default class CameraScreenBase extends Component {
         image: _.get(this.props, 'flashImages.off')
       }
     ];
+
     this.state = {
       captureImages: [],
       flashData: this.flashArray[this.currentFlashArrayPosition],
@@ -60,6 +63,7 @@ export default class CameraScreenBase extends Component {
       captured: false,
       scannerOptions : {}
     };
+
     this.onSetFlash = this.onSetFlash.bind(this);
     this.onSwitchCameraPressed = this.onSwitchCameraPressed.bind(this);
   }
@@ -77,6 +81,11 @@ export default class CameraScreenBase extends Component {
       ratios: (ratios || []),
       ratioArrayPosition: ((ratios.length > 0) ? 0 : -1)
     });
+
+
+      if (IsIOS && this.props.onReadCode){
+          this.setScannerListenerOnIos()
+      }
   }
 
   isCaptureRetakeMode() {
@@ -144,6 +153,12 @@ export default class CameraScreenBase extends Component {
     );
   }
 
+  setScannerListenerOnIos(){
+    if (this.props.onReadCode) {
+      BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, this.props.onReadCode)
+    }
+  }
+
   renderCamera() {
     return (
       <View style={styles.cameraContainer}>
@@ -161,8 +176,7 @@ export default class CameraScreenBase extends Component {
               scanBarcode={this.props.scanBarcode}
               laserColor={this.props.laserColor}
               frameColor={this.props.frameColor}
-              surfaceColor={this.props.surfaceColor}
-              onReadCode = {this.props.onReadCode}
+              onReadCode = {IsIOS ? ()=>{} : (event) => this.props.onReadCode({payload: event.nativeEvent.codeStringValue})}
               scannerOptions = {this.state.scannerOptions}
             />
         }
