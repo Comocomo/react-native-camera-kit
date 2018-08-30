@@ -1,0 +1,9 @@
+{
+  "apiKey":"2704e17527354570b1f2abf988895c9aeb585f4c66a643028430a8c472c74632",
+  "checkPolicies":true,
+  "productName":"Client",
+  "productVer":"1.0.0",
+  "projectName":"react-native-camera-kit",
+  "projectVer":"1.0.0",
+  "devDep": true
+}
