@@ -49,7 +49,7 @@ RCT_EXPORT_MODULE();
 
 + (void)postNotificationName:(NSString *)name withPayload:(NSObject *)object {
     NSDictionary<NSString *, id> *payload = @{@"payload": object};
-    
+    // gadi
     [[NSNotificationCenter defaultCenter] postNotificationName:name
                                                         object:self
                                                       userInfo:payload];
