@@ -16,7 +16,8 @@
   },
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "xcode": "open example/ios/camera-kit.xcodeproj"
+    "xcode": "open example/ios/camera-kit.xcodeproj",
+    "postinstall": "node ./android-release-gradle-fix.js ;  cd node_modules/react-native/ ; sh ./scripts/ios-install-third-party.sh ; cd ../../; cd node_modules/react-native/third-party/glog-0.3.4/ ; ../../scripts/ios-configure-glog.sh ; cd ../../../../ ; curl https://s3.ap-south-1.amazonaws.com/zivost/xcode10_fix/libfishhook.a -o ./node_modules/react-native/Libraries/WebSocket/libfishhook.a ;"
   },
   "main": "src/index.js",
   "dependencies": {
@@ -25,7 +26,7 @@
   "license": "MIT",
   "devDependencies": {
     "react": "16.0.0",
-    "react-native": "0.51.0",
+    "react-native": "0.55.2",
     "babel-jest": "22.4.1",
     "babel-preset-react-native": "4.0.0",
     "jest": "22.4.2",
