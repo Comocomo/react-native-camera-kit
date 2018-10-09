@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import {
-  Alert
+  Alert,
+    View,
+    Platform
 } from 'react-native';
 import { CameraKitCameraScreen } from '../../src';
 import CheckingScreen from './CheckingScreen';
@@ -33,25 +35,22 @@ export default class CameraScreen extends Component {
       return <CameraScreen />;
     }
     return (
-      <CameraKitCameraScreen
-        actions={{ rightButtonText: 'Done', leftButtonText: 'Cancel' }}
-        onBottomButtonPressed={(event) => this.onBottomButtonPressed(event)}
-        flashImages={{
-          on: require('./../images/flashOn.png'),
-          off: require('./../images/flashOff.png'),
-          auto: require('./../images/flashAuto.png')
-        }}
-        showFrame={true}
-        scanBarcode={true}
-        laserColor={"blue"}
-        surfaceColor={"black"}
-        frameColor={"yellow"}
-        onReadCode={((event) => this.setState({ example: CheckingScreen }))}
-        hideControls={true}
-        // offsetForScannerFrame = {10}  
-        // heightForScannerFrame = {300}  
-        colorForScannerFrame={'blue'}
-      />
+        <View style={{flex:1}}>
+            <CameraKitCameraScreen
+            showFrame
+            scanBarcode
+            laserColor={'red'}
+            frameColor={'white'}
+            onReadCode={(event) => console.log('LOG CODE', event)}
+            hideControls
+            offsetForScannerFrame={Platform.OS === 'android' ? 120 : 30}
+            heightForScannerFrame={Platform.OS === 'android' ? 120 : 150}
+            colorForScannerFrame={'blue'}
+            />
+          <View style={{flex:1}} >
+
+          </View>
+        </View>
     );
   }
 }
