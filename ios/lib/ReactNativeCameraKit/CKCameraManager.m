@@ -61,6 +61,10 @@ RCT_EXPORT_METHOD(requestDeviceCameraAuthorization:(RCTPromiseResolveBlock)resol
     }];
 }
 
+RCT_EXPORT_METHOD(registerBarcodeReader) {
+    [self.camera registerBarcodeReader];
+}
+
 
 RCT_EXPORT_METHOD(capture:(BOOL)shouldSaveToCameraRoll
                   resolve:(RCTPromiseResolveBlock)resolve

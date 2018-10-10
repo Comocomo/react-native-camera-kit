@@ -156,6 +156,7 @@ export default class CameraScreenBase extends Component {
   setScannerListenerOnIos(){
     if (this.props.onReadCode) {
       BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, this.props.onReadCode)
+      this.camera.registerBarcodeReader()
     }
   }
 
