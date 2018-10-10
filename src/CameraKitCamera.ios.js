@@ -32,6 +32,10 @@ export default class CameraKitCamera extends React.Component {
     const imageTmpPath = await NativeCameraAction.capture(saveToCameraRoll);
     return imageTmpPath;
   }
+
+   registerBarcodeReader() {
+      NativeCameraAction.registerBarcodeReader();
+    }
   
   async changeCamera() {
     const success = await NativeCameraAction.changeCamera();

@@ -158,6 +158,7 @@ export default class CameraScreenBase extends Component {
     if (this.props.onReadCode) {
         console.log("[react-native-camera-kit]: adding event listener to ", NativeModules.BarcodeEventEmitter.BARCODE_SCANNED)
       BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, (e) => {this.props.onReadCode(e); console.log("[react-native-camera-kit]: barcode scan event!!")})
+        this.camera.registerBarcodeReader()
     }
   }
 

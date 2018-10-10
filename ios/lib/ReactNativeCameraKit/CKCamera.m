@@ -249,6 +249,16 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 }
 
 
+
+-(void)registerBarcodeReader {
+    if (self.metadataOutput != NULL) {
+        self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+        [self.session addOutput:self.metadataOutput];
+        [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+        [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
+    }
+}
+
 -(void)setupCaptionSession {
     // Setup the capture session.
     // In general it is not safe to mutate an AVCaptureSession or any of its inputs, outputs, or connections from multiple threads at the same time.
@@ -310,6 +320,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         [self.session commitConfiguration];
     } );
 }
+
 
 -(void)handleCameraPermission {
     
