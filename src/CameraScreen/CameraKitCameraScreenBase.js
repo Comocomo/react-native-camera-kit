@@ -161,7 +161,7 @@ export default class CameraScreenBase extends Component {
   }
 
   renderCamera() {
-    console.log("[react-native-camera-kit]: renderCamera - isCaptureRetakeMode? ", this.isCaptureRetakeMode())
+    console.log("[react-native-camera-kit]: renderCamera - isCaptureRetakeMode? ", this.isCaptureRetakeMode(), "scanBarcode? ", this.props.scanBarcode)
     return (
       <View style={styles.cameraContainer}>
         {
@@ -178,7 +178,7 @@ export default class CameraScreenBase extends Component {
               scanBarcode={this.props.scanBarcode}
               laserColor={this.props.laserColor}
               frameColor={this.props.frameColor}
-              onReadCode = {IsIOS ? ()=>{} : (event) => this.props.onReadCode({payload: event.nativeEvent.codeStringValue})}
+              onReadCode = {IsIOS ? ()=>{console.log("[react-native-camera-kit]: onReadCode for ios")} : (event) => this.props.onReadCode({payload: event.nativeEvent.codeStringValue})}
               scannerOptions = {this.state.scannerOptions}
             />
         }
