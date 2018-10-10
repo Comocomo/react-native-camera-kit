@@ -154,12 +154,14 @@ export default class CameraScreenBase extends Component {
   }
 
   setScannerListenerOnIos(){
+    console.log("[react-native-camera-kit]: setScannerListenerOnIos", this.props.onReadCode)
     if (this.props.onReadCode) {
       BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, this.props.onReadCode)
     }
   }
 
   renderCamera() {
+    console.log("[react-native-camera-kit]: renderCamera - isCaptureRetakeMode? ", this.isCaptureRetakeMode())
     return (
       <View style={styles.cameraContainer}>
         {
