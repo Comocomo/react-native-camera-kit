@@ -25,7 +25,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "react": "16.0.0",
+    "react": "16.3.2",
     "react-native": "0.55.2",
     "babel-jest": "22.4.1",
     "babel-preset-react-native": "4.0.0",
