@@ -88,6 +88,10 @@ export default class CameraScreenBase extends Component {
       }
   }
 
+  componentWillUnmount() {
+      BarcodeEventEmitter.removeAllListeners(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED)
+  }
+
   isCaptureRetakeMode() {
     return !!(this.props.allowCaptureRetake && !_.isUndefined(this.state.imageCaptured));
   }
