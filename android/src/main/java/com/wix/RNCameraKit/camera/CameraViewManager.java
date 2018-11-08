@@ -213,11 +213,15 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         currentRotation = supportedRotation;
 
         if (cameraReleased.get()) return;
-        Camera.Parameters parameters = camera.getParameters();
-        parameters.setRotation(supportedRotation);
-        parameters.setPictureFormat(PixelFormat.JPEG);
-        camera.setDisplayOrientation(Orientation.getDeviceOrientation(reactContext.getCurrentActivity()));
-        camera.setParameters(parameters);
+        try {
+            Camera.Parameters parameters = camera.getParameters();
+            parameters.setRotation(supportedRotation);
+            parameters.setPictureFormat(PixelFormat.JPEG);
+            camera.setDisplayOrientation(Orientation.getDeviceOrientation(reactContext.getCurrentActivity()));
+            camera.setParameters(parameters);
+        } catch (Exception e) {
+
+        }
     }
 
     public static Camera.CameraInfo getCameraInfo() {
