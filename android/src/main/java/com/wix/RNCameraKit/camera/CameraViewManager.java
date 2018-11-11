@@ -292,10 +292,12 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         scanner = new BarcodeScanner(previewCallback, new BarcodeScanner.ResultHandler() {
             @Override
             public void handleResult(Result result) {
-                WritableMap event = Arguments.createMap();
-                event.putString("codeStringValue", result.getText());
-                if (!cameraViews.empty())
-                    reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(cameraViews.peek().getId(), "onReadCode", event);
+                if (shouldScan) {
+                    WritableMap event = Arguments.createMap();
+                    event.putString("codeStringValue", result.getText());
+                    if (!cameraViews.empty())
+                        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(cameraViews.peek().getId(), "onReadCode", event);
+                }
             }
         });
     }
