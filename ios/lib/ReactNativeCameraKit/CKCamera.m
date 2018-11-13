@@ -518,6 +518,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         
         
         // Capture a still image.
+        if(!connection.isEnabled) return;
         [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^( CMSampleBufferRef imageDataSampleBuffer, NSError *error ) {
             if ( imageDataSampleBuffer ) {
                 // The sample buffer is not retained. Create image data before saving the still image to the photo library asynchronously.
