@@ -97,6 +97,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 // frame for Scanner
 @property (nonatomic, strong) NSDictionary *scannerOptions;
 @property (nonatomic) BOOL showFrame;
+@property (nonatomic) BOOL scanBarcode;
 @property (nonatomic) UIView *greenScanner;
 
 @property (nonatomic) CGFloat frameOffset;
@@ -1115,7 +1116,7 @@ didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
         if ([metadataObject isKindOfClass:[AVMetadataMachineReadableCodeObject class]] && [self isSupportedBarCodeType:metadataObject.type]) {
             AVMetadataMachineReadableCodeObject *code = (AVMetadataMachineReadableCodeObject*)[self.previewLayer transformedMetadataObjectForMetadataObject:metadataObject];
             
-            if (self.onReadCode && code.stringValue && ![code.stringValue isEqualToString:self.codeStringValue]) {
+            if (self.scanBarcode && self.onReadCode && code.stringValue && ![code.stringValue isEqualToString:self.codeStringValue]) {
                 [BarcodeEventEmitter application:[UIApplication sharedApplication] didScanBarcode:code.stringValue];
 //                self.onReadCode(@{@"codeStringValue": code.stringValue});
 //                [self stopAnimatingScanner];
