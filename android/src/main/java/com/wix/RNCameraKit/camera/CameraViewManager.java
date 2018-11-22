@@ -213,11 +213,15 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         currentRotation = supportedRotation;
 
         if (cameraReleased.get()) return;
-        Camera.Parameters parameters = camera.getParameters();
-        parameters.setRotation(supportedRotation);
-        parameters.setPictureFormat(PixelFormat.JPEG);
-        camera.setDisplayOrientation(Orientation.getDeviceOrientation(reactContext.getCurrentActivity()));
-        camera.setParameters(parameters);
+        try {
+            Camera.Parameters parameters = camera.getParameters();
+            parameters.setRotation(supportedRotation);
+            parameters.setPictureFormat(PixelFormat.JPEG);
+            camera.setDisplayOrientation(Orientation.getDeviceOrientation(reactContext.getCurrentActivity()));
+            camera.setParameters(parameters);
+        } catch (Exception e) {
+
+        }
     }
 
     public static Camera.CameraInfo getCameraInfo() {
@@ -288,10 +292,12 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         scanner = new BarcodeScanner(previewCallback, new BarcodeScanner.ResultHandler() {
             @Override
             public void handleResult(Result result) {
-                WritableMap event = Arguments.createMap();
-                event.putString("codeStringValue", result.getText());
-                if (!cameraViews.empty())
-                    reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(cameraViews.peek().getId(), "onReadCode", event);
+                if (shouldScan) {
+                    WritableMap event = Arguments.createMap();
+                    event.putString("codeStringValue", result.getText());
+                    if (!cameraViews.empty())
+                        reactContext.getJSModule(RCTEventEmitter.class).receiveEvent(cameraViews.peek().getId(), "onReadCode", event);
+                }
             }
         });
     }

@@ -97,6 +97,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 // frame for Scanner
 @property (nonatomic, strong) NSDictionary *scannerOptions;
 @property (nonatomic) BOOL showFrame;
+@property (nonatomic) BOOL scanBarcode;
 @property (nonatomic) UIView *greenScanner;
 
 @property (nonatomic) CGFloat frameOffset;
@@ -251,12 +252,10 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 
 
 -(void)registerBarcodeReader {
-    if (self.metadataOutput != NULL) {
-        self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-        [self.session addOutput:self.metadataOutput];
-        [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-        [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
-    }
+    self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+    [self.session addOutput:self.metadataOutput];
+    [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+    [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
 }
 
 -(void)setupCaptionSession {
@@ -309,18 +308,18 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         else {
             self.setupResult = CKSetupResultSessionConfigurationFailed;
         }
-        if (self.onReadCode) {//TODO check if qrcode mode is on
-            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-            [self.session addOutput:self.metadataOutput];
-            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-            [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
-        }
+        // commented out because of addOutput crash
+//        if (self.onReadCode) {//TODO check if qrcode mode is on
+//            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+//            [self.session addOutput:self.metadataOutput];
+//            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+//            [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
+//        }
         
         
         [self.session commitConfiguration];
     } );
 }
-
 
 -(void)handleCameraPermission {
     
@@ -520,6 +519,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         
         
         // Capture a still image.
+        if(!connection.isEnabled) return;
         [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^( CMSampleBufferRef imageDataSampleBuffer, NSError *error ) {
             if ( imageDataSampleBuffer ) {
                 // The sample buffer is not retained. Create image data before saving the still image to the photo library asynchronously.
@@ -1116,7 +1116,7 @@ didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
         if ([metadataObject isKindOfClass:[AVMetadataMachineReadableCodeObject class]] && [self isSupportedBarCodeType:metadataObject.type]) {
             AVMetadataMachineReadableCodeObject *code = (AVMetadataMachineReadableCodeObject*)[self.previewLayer transformedMetadataObjectForMetadataObject:metadataObject];
             
-            if (self.onReadCode && code.stringValue && ![code.stringValue isEqualToString:self.codeStringValue]) {
+            if (self.scanBarcode && self.onReadCode && code.stringValue && ![code.stringValue isEqualToString:self.codeStringValue]) {
                 [BarcodeEventEmitter application:[UIApplication sharedApplication] didScanBarcode:code.stringValue];
 //                self.onReadCode(@{@"codeStringValue": code.stringValue});
 //                [self stopAnimatingScanner];

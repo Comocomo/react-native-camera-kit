@@ -33,6 +33,7 @@ RCT_EXPORT_VIEW_PROPERTY(onReadCode, RCTBubblingEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(scannerOptions, NSDictionary)
 RCT_EXPORT_VIEW_PROPERTY(showFrame, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(scanBarcode, BOOL)
 
 
 

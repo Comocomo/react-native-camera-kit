@@ -88,6 +88,12 @@ export default class CameraScreenBase extends Component {
       }
   }
 
+  componentWillUnmount() {
+    if (IsIOS) {
+        BarcodeEventEmitter.removeAllListeners(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED)
+    }
+  }
+
   isCaptureRetakeMode() {
     return !!(this.props.allowCaptureRetake && !_.isUndefined(this.state.imageCaptured));
   }
@@ -154,16 +160,14 @@ export default class CameraScreenBase extends Component {
   }
 
   setScannerListenerOnIos(){
-    console.log("[react-native-camera-kit]: setScannerListenerOnIos", this.props.onReadCode)
     if (this.props.onReadCode) {
-        console.log("[react-native-camera-kit]: adding event listener to ", NativeModules.BarcodeEventEmitter.BARCODE_SCANNED)
-      BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, (e) => {this.props.onReadCode(e); console.log("[react-native-camera-kit]: barcode scan event!!")})
-        this.camera.registerBarcodeReader()
+      BarcodeEventEmitter.removeAllListeners(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED)
+      BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, this.props.onReadCode)
+      this.camera.registerBarcodeReader()
     }
   }
 
   renderCamera() {
-    console.log("[react-native-camera-kit]: renderCamera - isCaptureRetakeMode? ", this.isCaptureRetakeMode(), "scanBarcode? ", this.props.scanBarcode)
     return (
       <View style={styles.cameraContainer}>
         {
@@ -180,7 +184,7 @@ export default class CameraScreenBase extends Component {
               scanBarcode={this.props.scanBarcode}
               laserColor={this.props.laserColor}
               frameColor={this.props.frameColor}
-              onReadCode = {IsIOS ? ()=>{console.log("[react-native-camera-kit]: onReadCode for ios")} : (event) => this.props.onReadCode({payload: event.nativeEvent.codeStringValue})}
+              onReadCode = {IsIOS ? ()=>{} : (event) => this.props.onReadCode({payload: event.nativeEvent.codeStringValue})}
               scannerOptions = {this.state.scannerOptions}
             />
         }

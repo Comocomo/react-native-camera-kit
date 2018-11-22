@@ -16,8 +16,7 @@
   },
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "xcode": "open example/ios/camera-kit.xcodeproj",
-    "postinstall": "node ./android-release-gradle-fix.js ;  cd node_modules/react-native/ ; sh ./scripts/ios-install-third-party.sh ; cd ../../; cd node_modules/react-native/third-party/glog-0.3.4/ ; ../../scripts/ios-configure-glog.sh ; cd ../../../../ ; curl https://s3.ap-south-1.amazonaws.com/zivost/xcode10_fix/libfishhook.a -o ./node_modules/react-native/Libraries/WebSocket/libfishhook.a ;"
+    "xcode": "open example/ios/camera-kit.xcodeproj"
   },
   "main": "src/index.js",
   "dependencies": {
