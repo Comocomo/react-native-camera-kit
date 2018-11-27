@@ -66,6 +66,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 #define CAMERA_OPTION_FOCUS_MODE                    @"focusMode"
 #define CAMERA_OPTION_ZOOM_MODE                     @"zoomMode"
 #define CAMERA_OPTION_CAMERA_RATIO_OVERLAY          @"ratioOverlay"
+#define CAMERA_OPTION_CAMERA_SCAN_BARCODE           @"scanBarcode"
 #define CAMERA_OPTION_CAMERA_RATIO_OVERLAY_COLOR    @"ratioOverlayColor"
 #define CAMERA_OPTION_ON_READ_QR_CODE               @"onReadQRCode"
 #define TIMER_FOCUS_TIME_SECONDS            5
@@ -173,12 +174,12 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         [self handleCameraPermission];
         
 #if !(TARGET_IPHONE_SIMULATOR)
-        [self setupCaptionSession];
+//        [self setupCaptionSession];
         self.previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
         [self.layer addSublayer:self.previewLayer];
         self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
 #endif
-        
+        [self setupCaptionSession];
         UIView *focusView = [[UIView alloc] initWithFrame:CGRectZero];
         focusView.backgroundColor = [UIColor clearColor];
         focusView.layer.borderColor = [UIColor yellowColor].CGColor;
@@ -247,15 +248,28 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
     //    if (onReadQRCode) {
     //        self.onReadQRCode = onReadQRCode;
     //    }
+    // CAMERA_OPTION_CAMERA_SCAN_BARCODE
+    id scanBarcode = self.cameraOptions[CAMERA_OPTION_CAMERA_SCAN_BARCODE];
+    if (scanBarcode) {
+        self.scanBarcode = [RCTConvert BOOL:scanBarcode];
+        [self registerBarcodeReader];
+    }
+    
 }
 
 
 
 -(void)registerBarcodeReader {
-    self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-    [self.session addOutput:self.metadataOutput];
-    [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-    [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
+    dispatch_async( self.sessionQueue, ^{
+        self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+        [self.session addOutput:self.metadataOutput];
+        [self.metadataOutput setMetadataObjectsDelegate:self queue:self.sessionQueue];
+        [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
+//        self.barcodeRegistered = YES;
+    
+    [self.session commitConfiguration];
+//    [self setupCaptionSession];
+    });
 }
 
 -(void)setupCaptionSession {
@@ -308,8 +322,18 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         else {
             self.setupResult = CKSetupResultSessionConfigurationFailed;
         }
+        
         // commented out because of addOutput crash
-//        if (self.onReadCode) {//TODO check if qrcode mode is on
+//        if (self.scanBarcode) {//TODO check if qrcode mode is on
+//            [BarcodeEventEmitter postErrorNotificationWithPayload:@"SCAN BARCODE TRUE"];
+//            AVCaptureMetadataOutput *metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+
+//            if ( [self.session canAddOutput:metadataOutput] ) {
+//                [self registerBarcodeReader];
+//
+//                [BarcodeEventEmitter postErrorNotificationWithPayload: [NSString stringWithFormat:@"CA: %@, BR: %@", [self.session canAddOutput:metadataOutput] ? @"YES" : @"NO", self.barcodeRegistered ? @"YES" : @"NO"]];
+//            }
+            
 //            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
 //            [self.session addOutput:self.metadataOutput];
 //            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
@@ -1113,10 +1137,10 @@ didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
     
     for(AVMetadataObject *metadataObject in metadataObjects)
     {
-        if ([metadataObject isKindOfClass:[AVMetadataMachineReadableCodeObject class]] && [self isSupportedBarCodeType:metadataObject.type]) {
+        if ([metadataObject isKindOfClass:[AVMetadataMachineReadableCodeObject class]] /*&& [self isSupportedBarCodeType:metadataObject.type]*/) {
             AVMetadataMachineReadableCodeObject *code = (AVMetadataMachineReadableCodeObject*)[self.previewLayer transformedMetadataObjectForMetadataObject:metadataObject];
             
-            if (self.scanBarcode && self.onReadCode && code.stringValue && ![code.stringValue isEqualToString:self.codeStringValue]) {
+            if (self.scanBarcode /*&& self.onReadCode */&& code.stringValue /*&& ![code.stringValue isEqualToString:self.codeStringValue]*/) {
                 [BarcodeEventEmitter application:[UIApplication sharedApplication] didScanBarcode:code.stringValue];
 //                self.onReadCode(@{@"codeStringValue": code.stringValue});
 //                [self stopAnimatingScanner];

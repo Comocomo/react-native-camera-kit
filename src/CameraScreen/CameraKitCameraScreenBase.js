@@ -10,7 +10,7 @@ import {
   NativeEventEmitter,
   Platform,
   SafeAreaView,
-  processColor  
+  processColor
 } from 'react-native';
 import _ from 'lodash';
 import CameraKitCamera from './../CameraKitCamera';
@@ -113,6 +113,10 @@ export default class CameraScreenBase extends Component {
       }
     }
 
+    if (this.props.scanBarcode) {
+      cameraOptions.scanBarcode = true
+    }
+
     return cameraOptions;
   }
 
@@ -163,7 +167,7 @@ export default class CameraScreenBase extends Component {
     if (this.props.onReadCode) {
       BarcodeEventEmitter.removeAllListeners(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED)
       BarcodeEventEmitter.addListener(NativeModules.BarcodeEventEmitter.BARCODE_SCANNED, this.props.onReadCode)
-      this.camera.registerBarcodeReader()
+      // this.camera.registerBarcodeReader()
     }
   }
 
