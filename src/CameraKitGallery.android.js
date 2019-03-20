@@ -51,13 +51,13 @@ async function requestDevicePhotosAuthorization() {
   return isAuthorized;
 }
 
-async function resizeImage(image = {}, quality = 'original') {
-    if (quality === 'original') {
-        return images;
-    }
-    const ans = await NativeGalleryModule.resizeImage(image, quality);
-    return ans;
-}
+// async function resizeImage(image = {}, quality = 'original') {
+//     if (quality === 'original') {
+//         return images;
+//     }
+//     const ans = await NativeGalleryModule.resizeImage(image, quality);
+//     return ans;
+// }
 
 
 export default {
