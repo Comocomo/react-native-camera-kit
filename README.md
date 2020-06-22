@@ -57,7 +57,7 @@ And in the package list in the same file (e.g. `getPackages`) add:
 
 ## Running the example project	
 
-- ```cd example```	
+- ```cd old-example```	
 - ```yarn``` or ```npm install``` (the ```yarn```/```npm``` should be in the example folder)	
 - ```react-native run-ios``` or ```react-native run-android``` 
 
@@ -66,6 +66,8 @@ And in the package list in the same file (e.g. `getPackages`) add:
 ### CameraKitCamera - Camera component 
 
 ```js
+import { CameraKitCamera } from 'react-native-camera-kit';
+
 <CameraKitCamera
   ref={cam => this.camera = cam}
   style={{
@@ -79,7 +81,7 @@ And in the package list in the same file (e.g. `getPackages`) add:
     ratioOverlay:'1:1',            // optional, ratio overlay on the camera and crop the image seamlessly
     ratioOverlayColor: '#00000077' // optional
   }}
-  onReadQRCode={(event) => console.log(event.nativeEvent.qrcodeStringValue)} // optional
+  onReadCode={(event) => console.log(event.nativeEvent.codeStringValue)} // optional
   
 />
 ```
@@ -136,6 +138,14 @@ Set flash mode (`auto`/`on`/`off`)
 const success = await this.camera.setFlashMode(newFlashData.mode);
 ```
 
+#### setTorchMode - must have the wanted camera capture reference
+
+Set Torch mode (`on`/`off`)
+
+```js
+const success = await this.camera.setTorchMode(newTorchMode);
+```
+
 #### changeCamera - must have the wanted camera capture reference
 
 Change to fornt/rear camera
@@ -152,6 +162,8 @@ Native Gallery View (based on `UICollectionView`(iOS) and ` RecyclerView` (Andro
 ![](img/camerakitgalleryview.png)
 
 ```js
+import { CameraKitGalleryView } from 'react-native-camera-kit';
+
 <CameraKitGalleryView
   ref={gallery => this.gallery = gallery}
   style={{flex: 1, marginTop: 20}}
@@ -224,6 +236,8 @@ Attribute | Values
 
 ## QR Code 
 ```js
+import { CameraKitCameraScreen } from 'react-native-camera-kit';
+
 <CameraKitCameraScreen
     actions={{ rightButtonText: 'Done', leftButtonText: 'Cancel' }}
     onBottomButtonPressed={(event) => this.onBottomButtonPressed(event)}
@@ -231,7 +245,7 @@ Attribute | Values
     laserColor={"blue"}
     frameColor={"yellow"}
 
-    onReadQRCode={((event) => Alert.alert("Qr code found"))} //optional
+    onReadCode={((event) => Alert.alert("Qr code found"))} //optional
     hideControls={false}           //(default false) optional, hide buttons and additional controls on top and bottom of screen
     showFrame={true}   //(default false) optional, show frame with transparent layer (qr code or barcode will be read on this area ONLY), start animation for scanner,that stoped when find any code. Frame always at center of the screen
     offsetForScannerFrame = {10}   //(default 30) optional, offset from left and right side of the screen
