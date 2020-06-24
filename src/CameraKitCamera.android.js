@@ -7,7 +7,9 @@ import {
 } from 'react-native';
 
 const NativeCamera = requireNativeComponent('CameraView', null);
-const NativeCameraModule = NativeModules.CameraModule;
+const NativeCameraModule = NativeModules.RNKitCameraModule;
+const TORCH_MODE_ON = 'on';
+const TORCH_MODE_CALL_ARG = 'torch';
 
 export default class CameraKitCamera extends React.Component {
 
@@ -27,23 +29,26 @@ export default class CameraKitCamera extends React.Component {
   }
 
   static async requestDeviceCameraAuthorization() {
-    const usersAuthorizationAnswer = await NativeCameraModule.requestDeviceCameraAuthorization();
-    return usersAuthorizationAnswer;
+    return await NativeCameraModule.requestDeviceCameraAuthorization();
   }
 
   async capture(saveToCameraRoll = true) {
-    const imageTmpPath = await NativeCameraModule.capture(saveToCameraRoll);
-    return imageTmpPath;
+    return await NativeCameraModule.capture(saveToCameraRoll);
   }
 
   async changeCamera() {
-    const success = await NativeCameraModule.changeCamera();
-    return success;
+    return await NativeCameraModule.changeCamera();
+  }
+
+  async setTorchMode(torchMode) {
+    if (torchMode == TORCH_MODE_ON){
+      return await NativeCameraModule.setFlashMode(TORCH_MODE_CALL_ARG);
+    }
+    return await NativeCameraModule.setFlashMode(torchMode);
   }
 
   async setFlashMode(flashMode = 'auto') {
-    const success = await NativeCameraModule.setFlashMode(flashMode);
-    return success;
+    return await NativeCameraModule.setFlashMode(flashMode);
   }
 
   static async checkDeviceCameraAuthorizationStatus() {
@@ -51,7 +56,6 @@ export default class CameraKitCamera extends React.Component {
   }
 
   static async hasCameraPermission() {
-    const success = await NativeCameraModule.hasCameraPermission();
-    return success;
+    return await NativeCameraModule.hasCameraPermission();
   }
 }

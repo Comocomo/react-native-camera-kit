@@ -21,6 +21,8 @@ const BarcodeEventEmitter = IsIOS ? new NativeEventEmitter(NativeModules.Barcode
 const FLASH_MODE_AUTO = 'auto';
 const FLASH_MODE_ON = 'on';
 const FLASH_MODE_OFF = 'off';
+const TORCH_MODE_ON = 'on';
+const TORCH_MODE_OFF = 'off';
 const OVERLAY_DEFAULT_COLOR = '#ffffff77';
 const OFFSET_FRAME = 30;
 const FRAME_HEIGHT = 200;
@@ -56,6 +58,7 @@ export default class CameraScreenBase extends Component {
     this.state = {
       captureImages: [],
       flashData: this.flashArray[this.currentFlashArrayPosition],
+      torchData: false,
       ratios: [],
       cameraOptions: {},
       ratioArrayPosition: -1,
@@ -65,6 +68,7 @@ export default class CameraScreenBase extends Component {
     };
 
     this.onSetFlash = this.onSetFlash.bind(this);
+    this.onSetTorch = this.onSetTorch.bind(this);
     this.onSwitchCameraPressed = this.onSwitchCameraPressed.bind(this);
   }
 
@@ -138,7 +142,7 @@ export default class CameraScreenBase extends Component {
         <Image
           style={{ flex: 1, justifyContent: 'center' }}
           source={this.state.flashData.image}
-          resizeMode={Image.resizeMode.contain}
+          resizeMode={"contain"}
         />
       </TouchableOpacity>
   }
@@ -149,7 +153,7 @@ export default class CameraScreenBase extends Component {
         <Image
           style={{ flex: 1, justifyContent: 'center' }}
           source={this.props.cameraFlipImage}
-          resizeMode={Image.resizeMode.contain}
+          resizeMode={"contain"}
         />
       </TouchableOpacity>
   }
@@ -313,6 +317,12 @@ export default class CameraScreenBase extends Component {
     const newFlashData = this.flashArray[this.currentFlashArrayPosition];
     this.setState({ flashData: newFlashData });
     this.camera.setFlashMode(newFlashData.mode);
+  }
+
+  async onSetTorch() {
+    const newTorchData = !this.state.torchData;
+    this.setState({ torchData: newTorchData });
+    newTorchData ? this.camera.setTorchMode(TORCH_MODE_ON) : this.camera.setTorchMode(TORCH_MODE_OFF); 
   }
 
   async onCaptureImagePressed() {
