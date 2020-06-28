@@ -324,6 +324,8 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         view.setShowFrame(show);
     }
 
+
+
     @ReactProp(name = "frameColor", defaultInt = Color.GREEN)
     public void setFrameColor(CameraView view, @ColorInt int color) {
         view.setFrameColor(color);
@@ -345,10 +347,19 @@ public class CameraViewManager extends SimpleViewManager<CameraView> {
         }
     }
 
+    @ReactProp(name = "cameraOptions")
+    public void setCameraOptions(CameraView view, ReadableMap options) {
+        if (options.hasKey("flashMode")) {
+            String flashModeFromProps = options.getString("flashMode");
+            flashMode = flashModeFromProps;
+        }
+    }
+
     @ReactProp(name = "surfaceColor")
     public void setSurfaceBackground(CameraView view, @ColorInt int color) {
         view.setSurfaceBgColor(color);
     }
+
 
     public static synchronized Rect getFramingRectInPreview(int previewWidth, int previewHeight) {
         return cameraViews.peek().getFramingRectInPreview(previewWidth, previewHeight);
