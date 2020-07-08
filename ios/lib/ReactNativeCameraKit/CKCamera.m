@@ -22,6 +22,7 @@
 #import "CKGalleryManager.h"
 
 #import "BarcodeEventEmitter.h"
+#import "ErrorEventEmitter.h"
 
 
 static void * CapturingStillImageContext = &CapturingStillImageContext;
@@ -355,6 +356,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         } @catch (NSException *exception) {
             self.setupResult = CKSetupResultSessionConfigurationFailed;
             NSLog( @"setupCaptionSession: %@", exception.reason);
+            [ErrorEventEmitter application:[UIApplication sharedApplication] errorEvent:exception.reason];
         }
     } );
 }
