@@ -3,13 +3,24 @@ import React, {Component} from 'react';
 import {
   requireNativeComponent,
   NativeModules,
-  processColor
+  processColor,
+  NativeEventEmitter
 } from 'react-native';
 
 const NativeCamera = requireNativeComponent('CKCamera', null);
 const NativeCameraAction = NativeModules.CKCameraManager;
-
+const errorEventEmitter = new NativeEventEmitter(NativeCameraAction);
 export default class CameraKitCamera extends React.Component {
+  componentDidMount(){
+    const subscription = errorEventEmitter.addListener(
+    'ErrorEventEmitter/error',
+    (reminder) => console.log(reminder.name)
+    );
+
+  }
+  componentWillUnmount(){
+    subscription.remove()
+  }
   render() {
 
     const transformedProps = _.cloneDeep(this.props);

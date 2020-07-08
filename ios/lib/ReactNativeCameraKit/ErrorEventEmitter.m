@@ -41,8 +41,8 @@ RCT_EXPORT_MODULE();
 
 # pragma mark Public
 
-+ (BOOL)application:(UIApplication *)application errorEvent:(NSString *)barcodeString {
-    [self postNotificationName:error withPayload:barcodeString];
++ (BOOL)application:(UIApplication *)application errorEvent:(NSString *)errorString {
+    [self postNotificationName:error withPayload:errorString];
     return YES;
 }
 
