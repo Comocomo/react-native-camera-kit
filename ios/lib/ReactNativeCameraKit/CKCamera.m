@@ -553,7 +553,6 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 
 + (void)setFlashMode:(AVCaptureFlashMode)flashMode forDevice:(AVCaptureDevice *)device
 {
-    @try {
         if ( device.hasFlash && [device isFlashModeSupported:flashMode] ) {
             NSError *error = nil;
             if ( [device lockForConfiguration:&error] ) {
@@ -564,10 +563,6 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
                 //NSLog( @"Could not lock device for configuration: %@", error );
             }
         }
-    } @catch (NSException *exception) {
-        [self handleExcepction: (NSString *)@"setFlashMode ": exception];
-    }
-    
 }
 
 - (void)setRatio:(NSString*)ratioString {
