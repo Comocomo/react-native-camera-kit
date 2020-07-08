@@ -32,31 +32,42 @@ typedef NS_ENUM( NSInteger, CKSetupResult ) {
     CKSetupResultSessionConfigurationFailed
 };
 
+@implementation RCTConvert(CKCameraTorchMode)
+
+RCT_ENUM_CONVERTER(CKCameraTorchMode, (@{
+    @"auto": @(AVCaptureTorchModeAuto),
+    @"on": @(AVCaptureTorchModeOn),
+    @"off": @(AVCaptureTorchModeOff)
+                                       }), AVCaptureTorchModeAuto, integerValue)
+
+
+@end
+
 @implementation RCTConvert(CKCameraFlashMode)
 
 RCT_ENUM_CONVERTER(CKCameraFlashMode, (@{
-                                         @"auto": @(AVCaptureFlashModeAuto),
-                                         @"on": @(AVCaptureFlashModeOn),
-                                         @"off": @(AVCaptureFlashModeOff)
-                                         }), AVCaptureFlashModeAuto, integerValue)
+    @"auto": @(AVCaptureFlashModeAuto),
+    @"on": @(AVCaptureFlashModeOn),
+    @"off": @(AVCaptureFlashModeOff)
+                                       }), AVCaptureFlashModeAuto, integerValue)
 
 @end
 
 @implementation RCTConvert(CKCameraFocushMode)
 
 RCT_ENUM_CONVERTER(CKCameraFocushMode, (@{
-                                          @"on": @(CKCameraFocushModeOn),
-                                          @"off": @(CKCameraFocushModeOff)
-                                          }), CKCameraFocushModeOn, integerValue)
+    @"on": @(CKCameraFocushModeOn),
+    @"off": @(CKCameraFocushModeOff)
+                                        }), CKCameraFocushModeOn, integerValue)
 
 @end
 
 @implementation RCTConvert(CKCameraZoomMode)
 
 RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
-                                        @"on": @(CKCameraZoomModeOn),
-                                        @"off": @(CKCameraZoomModeOff)
-                                        }), CKCameraZoomModeOn, integerValue)
+    @"on": @(CKCameraZoomModeOn),
+    @"off": @(CKCameraZoomModeOff)
+                                      }), CKCameraZoomModeOn, integerValue)
 
 @end
 
@@ -71,7 +82,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 #define CAMERA_OPTION_ON_READ_QR_CODE               @"onReadQRCode"
 #define TIMER_FOCUS_TIME_SECONDS            5
 
-@interface CKCamera () <AVCaptureFileOutputRecordingDelegate, AVCaptureMetadataOutputObjectsDelegate>
+@interface CKCamera () <AVCaptureMetadataOutputObjectsDelegate>
 
 
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
@@ -107,6 +118,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 @property (nonatomic) UIView * dataReadingFrame;
 
 // cameraOptions props
+@property (nonatomic) AVCaptureTorchMode torchMode;
 @property (nonatomic) AVCaptureFlashMode flashMode;
 @property (nonatomic) CKCameraFocushMode focusMode;
 @property (nonatomic) CKCameraZoomMode zoomMode;
@@ -125,7 +137,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 - (void)dealloc
 {
     [self removeObservers];
-    //NSLog(@"dealloc");
+    //    NSLog(@"dealloc");
 }
 
 -(PHFetchOptions *)fetchOptions {
@@ -144,8 +156,8 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 - (void)removeReactSubview:(UIView *)subview
 {
     [subview removeFromSuperview];
+    [super removeReactSubview:subview];
 }
-
 
 - (void)removeFromSuperview
 {
@@ -160,7 +172,6 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
     
 }
 
-
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     
@@ -168,13 +179,16 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         // Create the AVCaptureSession.
         self.session = [[AVCaptureSession alloc] init];
         
+        // Fit camera preview inside of viewport
+        self.session.sessionPreset = AVCaptureSessionPresetPhoto;
+        
         // Communicate with the session and other session objects on this queue.
         self.sessionQueue = dispatch_queue_create( "session queue", DISPATCH_QUEUE_SERIAL );
         
         [self handleCameraPermission];
         
 #if !(TARGET_IPHONE_SIMULATOR)
-//        [self setupCaptionSession];
+        //        [self setupCaptionSession];
         self.previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
         [self.layer addSublayer:self.previewLayer];
         self.previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
@@ -197,7 +211,6 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
     
     return self;
 }
-
 
 -(void)setCameraOptions:(NSDictionary *)cameraOptions {
     _cameraOptions = cameraOptions;
@@ -265,10 +278,10 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
         [self.session addOutput:self.metadataOutput];
         [self.metadataOutput setMetadataObjectsDelegate:self queue:self.sessionQueue];
         [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
-//        self.barcodeRegistered = YES;
-    
-    [self.session commitConfiguration];
-//    [self setupCaptionSession];
+        //        self.barcodeRegistered = YES;
+        
+        [self.session commitConfiguration];
+        //    [self setupCaptionSession];
     });
 }
 
@@ -279,69 +292,75 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
     // Because -[AVCaptureSession startRunning] is a blocking call which can take a long time. We dispatch session setup to the sessionQueue
     // so that the main queue isn't blocked, which keeps the UI responsive.
     dispatch_async( self.sessionQueue, ^{
-        if ( self.setupResult != CKSetupResultSuccess ) {
-            return;
-        }
-        
-        self.backgroundRecordingID = UIBackgroundTaskInvalid;
-        NSError *error = nil;
-        
-        AVCaptureDevice *videoDevice = [CKCamera deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];
-        AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
-        
-        [self.session beginConfiguration];
-        
-        if ( [self.session canAddInput:videoDeviceInput] ) {
-            [self.session addInput:videoDeviceInput];
-            self.videoDeviceInput = videoDeviceInput;
-            [CKCamera setFlashMode:self.flashMode forDevice:self.videoDeviceInput.device];
-        }
-        else {
-            self.setupResult = CKSetupResultSessionConfigurationFailed;
-        }
-        
-        AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
-        if ( [self.session canAddOutput:movieFileOutput] ) {
-            [self.session addOutput:movieFileOutput];
-            AVCaptureConnection *connection = [movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-            if ( connection.isVideoStabilizationSupported ) {
-                connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
+        @try {
+           
+            if ( self.setupResult != CKSetupResultSuccess ) {
+                return;
             }
-            self.movieFileOutput = movieFileOutput;
-        }
-        else {
-            self.setupResult = CKSetupResultSessionConfigurationFailed;
-        }
-        
-        AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-        if ( [self.session canAddOutput:stillImageOutput] ) {
-            stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
-            [self.session addOutput:stillImageOutput];
-            self.stillImageOutput = stillImageOutput;
-        }
-        else {
-            self.setupResult = CKSetupResultSessionConfigurationFailed;
-        }
-        
-        // commented out because of addOutput crash
-//        if (self.scanBarcode) {//TODO check if qrcode mode is on
-//            [BarcodeEventEmitter postErrorNotificationWithPayload:@"SCAN BARCODE TRUE"];
-//            AVCaptureMetadataOutput *metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-
-//            if ( [self.session canAddOutput:metadataOutput] ) {
-//                [self registerBarcodeReader];
-//
-//                [BarcodeEventEmitter postErrorNotificationWithPayload: [NSString stringWithFormat:@"CA: %@, BR: %@", [self.session canAddOutput:metadataOutput] ? @"YES" : @"NO", self.barcodeRegistered ? @"YES" : @"NO"]];
-//            }
             
-//            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-//            [self.session addOutput:self.metadataOutput];
-//            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-//            [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
-//        }
-        
-        
-        [self.session commitConfiguration];
+            self.backgroundRecordingID = UIBackgroundTaskInvalid;
+            NSError *error = nil;
+            
+            AVCaptureDevice *videoDevice = [CKCamera deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];
+            AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+            
+            [self.session beginConfiguration];
+            
+            if ( [self.session canAddInput:videoDeviceInput] ) {
+                [self.session addInput:videoDeviceInput];
+                self.videoDeviceInput = videoDeviceInput;
+                [CKCamera setFlashMode:self.flashMode forDevice:self.videoDeviceInput.device];
+            }
+            else {
+                self.setupResult = CKSetupResultSessionConfigurationFailed;
+            }
+            
+            AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
+            if ( [self.session canAddOutput:movieFileOutput] ) {
+                [self.session addOutput:movieFileOutput];
+                AVCaptureConnection *connection = [movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+                if ( connection.isVideoStabilizationSupported ) {
+                    connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
+                }
+                self.movieFileOutput = movieFileOutput;
+            }
+            else {
+                self.setupResult = CKSetupResultSessionConfigurationFailed;
+            }
+            
+            AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+            if ( [self.session canAddOutput:stillImageOutput] ) {
+                stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
+                [self.session addOutput:stillImageOutput];
+                self.stillImageOutput = stillImageOutput;
+            }
+            else {
+                self.setupResult = CKSetupResultSessionConfigurationFailed;
+            }
+            
+            // commented out because of addOutput crash
+            //        if (self.scanBarcode) {//TODO check if qrcode mode is on
+            //            [BarcodeEventEmitter postErrorNotificationWithPayload:@"SCAN BARCODE TRUE"];
+            //            AVCaptureMetadataOutput *metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+            
+            //            if ( [self.session canAddOutput:metadataOutput] ) {
+            //                [self registerBarcodeReader];
+            //
+            //                [BarcodeEventEmitter postErrorNotificationWithPayload: [NSString stringWithFormat:@"CA: %@, BR: %@", [self.session canAddOutput:metadataOutput] ? @"YES" : @"NO", self.barcodeRegistered ? @"YES" : @"NO"]];
+            //            }
+            
+            //            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+            //            [self.session addOutput:self.metadataOutput];
+            //            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+            //            [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
+            //        }
+            
+            [self.session commitConfiguration];
+            
+        } @catch (NSException *exception) {
+            self.setupResult = CKSetupResultSessionConfigurationFailed;
+            NSLog( @"setupCaptionSession: %@", exception.reason);
+        }
     } );
 }
 
@@ -499,28 +518,51 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
     return captureDevice;
 }
 
+-(void)setTorchMode:(AVCaptureTorchMode)torchMode callback:(CallbackBlock)block
+{
+    _torchMode = torchMode;
+    if (self.videoDeviceInput && [self.videoDeviceInput.device isTorchModeSupported:torchMode] && self.videoDeviceInput.device.hasTorch) {
+        NSError* err = nil;
+        if ( [self.videoDeviceInput.device lockForConfiguration:&err] ) {
+            [self.videoDeviceInput.device setTorchMode:torchMode];
+            [self.videoDeviceInput.device unlockForConfiguration];
+        }
+    }
+    if (block) {
+        block(self.videoDeviceInput.device.torchMode == torchMode);
+    }
+}
 
 - (void)setFlashMode:(AVCaptureFlashMode)flashMode callback:(CallbackBlock)block {
-    _flashMode = flashMode;
-    [CKCamera setFlashMode:flashMode forDevice:self.videoDeviceInput.device];
-    if (block) {
-        block(self.videoDeviceInput.device.flashMode == flashMode);
+    @try {
+        _flashMode = flashMode;
+        [CKCamera setFlashMode:flashMode forDevice:self.videoDeviceInput.device];
+        if (block) {
+            block(self.videoDeviceInput.device.flashMode == flashMode);
+        }
+    } @catch (NSException *exception) {
+        NSLog( @"setFlashMode: %@", exception.reason);
     }
 }
 
 
 + (void)setFlashMode:(AVCaptureFlashMode)flashMode forDevice:(AVCaptureDevice *)device
 {
-    if ( device.hasFlash && [device isFlashModeSupported:flashMode] ) {
-        NSError *error = nil;
-        if ( [device lockForConfiguration:&error] ) {
-            device.flashMode = flashMode;
-            [device unlockForConfiguration];
+    @try {
+        if ( device.hasFlash && [device isFlashModeSupported:flashMode] ) {
+            NSError *error = nil;
+            if ( [device lockForConfiguration:&error] ) {
+                device.flashMode = flashMode;
+                [device unlockForConfiguration];
+            }
+            else {
+                //NSLog( @"Could not lock device for configuration: %@", error );
+            }
         }
-        else {
-            //NSLog( @"Could not lock device for configuration: %@", error );
-        }
+    } @catch (NSException *exception) {
+        NSLog( @"setFlashMode: %@", exception.reason);
     }
+    
 }
 
 - (void)setRatio:(NSString*)ratioString {
@@ -536,78 +578,85 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 
 - (void)snapStillImage:(BOOL)shouldSaveToCameraRoll success:(CaptureBlock)block {
     dispatch_async( self.sessionQueue, ^{
-        AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-        
-        // Update the orientation on the still image output video connection before capturing.
-        connection.videoOrientation = self.previewLayer.connection.videoOrientation;
-        
-        
-        // Capture a still image.
-        if(!connection.isEnabled) return;
-        [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^( CMSampleBufferRef imageDataSampleBuffer, NSError *error ) {
-            if ( imageDataSampleBuffer ) {
-                // The sample buffer is not retained. Create image data before saving the still image to the photo library asynchronously.
-                NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
-                UIImage *capturedImage = [UIImage imageWithData:imageData];
-                capturedImage = [CKCamera rotateImage:capturedImage];
-                
-                CGSize previewScaleSize = [CKCamera cropImageToPreviewSize:capturedImage size:self.previewLayer.bounds.size];
-                CGRect rectToCrop = CGRectMake((capturedImage.size.width-previewScaleSize.width)*0.5, (capturedImage.size.height-previewScaleSize.height)*0.5, previewScaleSize.width, previewScaleSize.height);
-                
-                if (self.ratioOverlayString) {
-                    
-                    rectToCrop = [CKCamera cropRectForSize:rectToCrop overlayObject:self.cameraOverlayView.overlayObject];
-                }
-                
-                CGImageRef imageRef = CGImageCreateWithImageInRect(capturedImage.CGImage, rectToCrop);
-                capturedImage = [UIImage imageWithCGImage:imageRef scale:capturedImage.scale orientation:UIImageOrientationUp];
-                imageData = UIImageJPEGRepresentation(capturedImage, 0.85f);
-                
-                [PHPhotoLibrary requestAuthorization:^( PHAuthorizationStatus status ) {
-                    NSMutableDictionary *imageInfoDict = [[NSMutableDictionary alloc] init];
-                    
-                    NSURL *temporaryFileURL = [CKCamera saveToTmpFolder:imageData];
-                    if (temporaryFileURL) {
-                        imageInfoDict[@"uri"] = temporaryFileURL.description;
-                        imageInfoDict[@"name"] = temporaryFileURL.lastPathComponent;
-                    }
-                    imageInfoDict[@"size"] = [NSNumber numberWithInteger:imageData.length];
-                    
-                    if (capturedImage && [capturedImage isKindOfClass:[UIImage class]]) {
-                        imageInfoDict[@"width"] = [NSNumber numberWithDouble:capturedImage.size.width];
-                        imageInfoDict[@"height"] = [NSNumber numberWithDouble:capturedImage.size.height];
-                    }
-                    
-                    if ( status == PHAuthorizationStatusAuthorized && shouldSaveToCameraRoll ) {
-                        NSData *compressedImageData = UIImageJPEGRepresentation(capturedImage, 1.0f);
+        @try {
+            AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+            // Capture a still image.
+            if (!connection || !connection.isEnabled || !connection.active) {
+                return;
+            }
+            connection.videoOrientation = self.previewLayer.connection.videoOrientation;
+            // Update the orientation on the still image output video connection before capturing.
+            
+            [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^( CMSampleBufferRef imageDataSampleBuffer, NSError *error ) {
+                @try {
+                    if ( imageDataSampleBuffer ) {
+                        // The sample buffer is not retained. Create image data before saving the still image to the photo library asynchronously.
+                        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+                        UIImage *capturedImage = [UIImage imageWithData:imageData];
+                        capturedImage = [CKCamera rotateImage:capturedImage];
                         
-                        [CKGalleryManager saveImageToCameraRoll:compressedImageData temporaryFileURL:temporaryFileURL block:^(BOOL success) {
-                            if (success) {
-                                NSString *localIdentifier = [CKGalleryManager getImageLocalIdentifierForFetchOptions:self.fetchOptions];
-                                if (localIdentifier) {
-                                    imageInfoDict[@"id"] = localIdentifier;
-                                }
-                                
-                                if (block) {
-                                    block(imageInfoDict);
-                                }
+                        CGSize previewScaleSize = [CKCamera cropImageToPreviewSize:capturedImage size:self.previewLayer.bounds.size];
+                        CGRect rectToCrop = CGRectMake((capturedImage.size.width-previewScaleSize.width)*0.5, (capturedImage.size.height-previewScaleSize.height)*0.5, previewScaleSize.width, previewScaleSize.height);
+                        
+                        if (self.ratioOverlayString) {
+                            
+                            rectToCrop = [CKCamera cropRectForSize:rectToCrop overlayObject:self.cameraOverlayView.overlayObject];
+                        }
+                        
+                        CGImageRef imageRef = CGImageCreateWithImageInRect(capturedImage.CGImage, rectToCrop);
+                        capturedImage = [UIImage imageWithCGImage:imageRef scale:capturedImage.scale orientation:UIImageOrientationUp];
+                        imageData = UIImageJPEGRepresentation(capturedImage, 0.85f);
+                        
+                        [PHPhotoLibrary requestAuthorization:^( PHAuthorizationStatus status ) {
+                            NSMutableDictionary *imageInfoDict = [[NSMutableDictionary alloc] init];
+                            
+                            NSURL *temporaryFileURL = [CKCamera saveToTmpFolder:imageData];
+                            if (temporaryFileURL) {
+                                imageInfoDict[@"uri"] = temporaryFileURL.description;
+                                imageInfoDict[@"name"] = temporaryFileURL.lastPathComponent;
                             }
-                            else {
-                                //NSLog( @"Could not save to camera roll");
+                            imageInfoDict[@"size"] = [NSNumber numberWithInteger:imageData.length];
+                            
+                            if (capturedImage && [capturedImage isKindOfClass:[UIImage class]]) {
+                                imageInfoDict[@"width"] = [NSNumber numberWithDouble:capturedImage.size.width];
+                                imageInfoDict[@"height"] = [NSNumber numberWithDouble:capturedImage.size.height];
+                            }
+                            
+                            if ( status == PHAuthorizationStatusAuthorized && shouldSaveToCameraRoll ) {
+                                NSData *compressedImageData = UIImageJPEGRepresentation(capturedImage, 1.0f);
+                                
+                                [CKGalleryManager saveImageToCameraRoll:compressedImageData temporaryFileURL:temporaryFileURL block:^(BOOL success) {
+                                    if (success) {
+                                        NSString *localIdentifier = [CKGalleryManager getImageLocalIdentifierForFetchOptions:self.fetchOptions];
+                                        if (localIdentifier) {
+                                            imageInfoDict[@"id"] = localIdentifier;
+                                        }
+                                        
+                                        if (block) {
+                                            block(imageInfoDict);
+                                        }
+                                    }
+                                    else {
+                                        //NSLog( @"Could not save to camera roll");
+                                    }
+                                }];
+                            }
+                            else if (block) {
+                                block(imageInfoDict);
                             }
                         }];
+                        
+                        CGImageRelease(imageRef);
+                    } else {
+                        //NSLog( @"Could not capture still image: %@", error );
                     }
-                    else if (block) {
-                        block(imageInfoDict);
-                    }
-                }];
-                
-                CGImageRelease(imageRef);
-            }
-            else {
-                //NSLog( @"Could not capture still image: %@", error );
-            }
-        }];
+                } @catch (NSException *exception) {
+                    NSLog( @"snapStillImage completionHandler: %@", exception.reason);
+                }
+            }];
+        } @catch (NSException *exception) {
+            NSLog( @"snapStillImage %@", exception.reason);
+        }
     } );
 }
 
@@ -691,7 +740,7 @@ static inline double radians (double degrees) {return degrees * M_PI/180;}
         }
         
         AVCaptureConnection *connection = [self.movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-        if ( connection.isVideoStabilizationSupported ) {
+        if (connection || connection.isEnabled || connection.isVideoStabilizationSupported ) {
             connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
         }
         
@@ -862,9 +911,6 @@ static inline double radians (double degrees) {return degrees * M_PI/180;}
 }
 
 +(CGSize)cropImageToPreviewSize:(UIImage*)image size:(CGSize)previewSize {
-    
-    CGRect ans = CGRectZero;
-    CGSize centerSize = CGSizeZero;
     
     float imageToPreviewWidthScale = image.size.width/previewSize.width;
     float imageToPreviewHeightScale = image.size.width/previewSize.width;
@@ -1079,7 +1125,7 @@ static inline double radians (double degrees) {return degrees * M_PI/180;}
     
     // Automatically try to restart the session running if media services were reset and the last start running succeeded.
     // Otherwise, enable the user to try to resume the session running.
-    if ( error.code == AVErrorMediaServicesWereReset ) {
+    if (true || error.code == AVErrorMediaServicesWereReset ) {
         dispatch_async( self.sessionQueue, ^{
             if ( self.isSessionRunning ) {
                 [self.session startRunning];
@@ -1142,8 +1188,8 @@ didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
             
             if (self.scanBarcode /*&& self.onReadCode */&& code.stringValue /*&& ![code.stringValue isEqualToString:self.codeStringValue]*/) {
                 [BarcodeEventEmitter application:[UIApplication sharedApplication] didScanBarcode:code.stringValue];
-//                self.onReadCode(@{@"codeStringValue": code.stringValue});
-//                [self stopAnimatingScanner];
+                //                self.onReadCode(@{@"codeStringValue": code.stringValue});
+                //                [self stopAnimatingScanner];
             }
         }
     }
@@ -1154,7 +1200,7 @@ didOutputMetadataObjects:(NSArray<__kindof AVMetadataObject *> *)metadataObjects
     NSArray *supportedBarcodeTypes = @[AVMetadataObjectTypeUPCECode,AVMetadataObjectTypeCode39Code,AVMetadataObjectTypeCode39Mod43Code,
                                        AVMetadataObjectTypeEAN13Code,AVMetadataObjectTypeEAN8Code, AVMetadataObjectTypeCode93Code,
                                        AVMetadataObjectTypeCode128Code, AVMetadataObjectTypePDF417Code, AVMetadataObjectTypeQRCode,
-                                       AVMetadataObjectTypeAztecCode];
+                                       AVMetadataObjectTypeAztecCode, AVMetadataObjectTypeDataMatrixCode];
     for (NSString* object in supportedBarcodeTypes) {
         if ([currentType isEqualToString:object]) {
             result = YES;
@@ -1171,7 +1217,4 @@ const NSString *colorForFrame             = @"colorForFrame";
 const NSString *isNeedMultipleScanBarcode = @"isNeedMultipleScanBarcode";
 
 
-
-
 @end
-

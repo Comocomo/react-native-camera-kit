@@ -21,6 +21,7 @@
 		26F556721D2501C9007B1C11 /* GalleryData.m in Sources */ = {isa = PBXBuildFile; fileRef = 26F556711D2501C9007B1C11 /* GalleryData.m */; };
 		48C8312821369D390062B3FA /* BarcodeEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = 48C8312721369D390062B3FA /* BarcodeEventEmitter.m */; };
 		A7686BFE1EC9CFEC00959216 /* CKCompressedImage.m in Sources */ = {isa = PBXBuildFile; fileRef = A7686BFD1EC9CFEC00959216 /* CKCompressedImage.m */; };
+		D336B54524B5BEA800C94C7C /* ErrorEventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = D336B54424B5BEA800C94C7C /* ErrorEventEmitter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -65,6 +66,8 @@
 		48C8312921369D480062B3FA /* BarcodeEventEmitter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BarcodeEventEmitter.h; sourceTree = "<group>"; };
 		A7686BFC1EC9CFEC00959216 /* CKCompressedImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CKCompressedImage.h; sourceTree = "<group>"; };
 		A7686BFD1EC9CFEC00959216 /* CKCompressedImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CKCompressedImage.m; sourceTree = "<group>"; };
+		D336B54324B5BE5000C94C7C /* ErrorEventEmitter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ErrorEventEmitter.h; sourceTree = "<group>"; };
+		D336B54424B5BEA800C94C7C /* ErrorEventEmitter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ErrorEventEmitter.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,6 +135,8 @@
 				2625648E1E6572B300A7B90D /* CKGalleryCustomCollectionViewCell.h */,
 				2625648F1E6572B300A7B90D /* CKGalleryCustomCollectionViewCell.m */,
 				48C8312921369D480062B3FA /* BarcodeEventEmitter.h */,
+				D336B54324B5BE5000C94C7C /* ErrorEventEmitter.h */,
+				D336B54424B5BEA800C94C7C /* ErrorEventEmitter.m */,
 				48C8312721369D390062B3FA /* BarcodeEventEmitter.m */,
 			);
 			path = ReactNativeCameraKit;
@@ -176,6 +181,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 264693451CFB2A6B00F3A740;
@@ -196,6 +202,7 @@
 				26550AF61CFC7086007FF2DF /* CKCameraManager.m in Sources */,
 				A7686BFE1EC9CFEC00959216 /* CKCompressedImage.m in Sources */,
 				48C8312821369D390062B3FA /* BarcodeEventEmitter.m in Sources */,
+				D336B54524B5BEA800C94C7C /* ErrorEventEmitter.m in Sources */,
 				262E42201D183A6B00C82B27 /* CKGalleryCollectionViewCell.m in Sources */,
 				262564901E6572B300A7B90D /* CKGalleryCustomCollectionViewCell.m in Sources */,
 				269292861D3B81C800E07DDF /* CKOverlayObject.m in Sources */,
