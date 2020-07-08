@@ -355,10 +355,18 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
             [self.session commitConfiguration];
         } @catch (NSException *exception) {
             self.setupResult = CKSetupResultSessionConfigurationFailed;
-            NSLog( @"setupCaptionSession: %@", exception.reason);
-            [ErrorEventEmitter application:[UIApplication sharedApplication] errorEvent:exception.reason];
+            [self handleExcepction: (NSString *)@"setupCaptionSession ": exception];
         }
     } );
+}
+
+-(void) handleExcepction: (NSString *)funcName: (NSException *)exception  {
+    NSString *exceptionData = [NSString stringWithFormat:@"%@ %@", funcName, exception.name];
+    // exception.reason value is nullable
+    if (exception.reason.length > 0) {
+        exceptionData = [NSString stringWithFormat:@"%@ %@", exceptionData, exception.reason];
+    }
+    [ErrorEventEmitter application:[UIApplication sharedApplication] errorEvent:exceptionData];
 }
 
 -(void)handleCameraPermission {
@@ -538,7 +546,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
             block(self.videoDeviceInput.device.flashMode == flashMode);
         }
     } @catch (NSException *exception) {
-        NSLog( @"setFlashMode: %@", exception.reason);
+        [self handleExcepction: (NSString *)@"setFlashMode ": exception];
     }
 }
 
@@ -557,7 +565,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
             }
         }
     } @catch (NSException *exception) {
-        NSLog( @"setFlashMode: %@", exception.reason);
+        [self handleExcepction: (NSString *)@"setFlashMode ": exception];
     }
     
 }
@@ -645,11 +653,11 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
                         //NSLog( @"Could not capture still image: %@", error );
                     }
                 } @catch (NSException *exception) {
-                    NSLog( @"snapStillImage completionHandler: %@", exception.reason);
+                    [self handleExcepction: (NSString *)@"snapStillImage completionHandler": exception];
                 }
             }];
         } @catch (NSException *exception) {
-            NSLog( @"snapStillImage %@", exception.reason);
+             [self handleExcepction: (NSString *)@"snapStillImage": exception];
         }
         
     } );

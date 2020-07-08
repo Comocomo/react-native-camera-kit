@@ -18,7 +18,7 @@ export default class CameraKitCamera extends React.Component {
   static propTypes = {
     onErrorIOS: PropTypes.func,
   }
-  
+
   static defaultProps = {
     onErrorIOS: () => {}
   }
@@ -30,8 +30,8 @@ export default class CameraKitCamera extends React.Component {
     )
   }
 
-  onErrorIOS() {
-    this.props.onIOSError()
+  onErrorIOS(error) {
+    this.props.onIOSError(error)
   }
 
 
