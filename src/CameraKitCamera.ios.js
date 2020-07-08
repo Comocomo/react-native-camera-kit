@@ -5,8 +5,7 @@ import {
   requireNativeComponent,
   NativeModules,
   processColor,
-  NativeEventEmitter,
-  Platform
+  NativeEventEmitter
 } from 'react-native';
 
 const NativeCamera = requireNativeComponent('CKCamera', null);
@@ -36,9 +35,7 @@ export default class CameraKitCamera extends React.Component {
 
 
   componentWillUnmount(){
-    if (Platform.os == 'IOS') {
-      subscription.remove()
-    }
+    subscription.remove()
   }
 
   render() {
