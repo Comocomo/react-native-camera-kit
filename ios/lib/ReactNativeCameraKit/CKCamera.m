@@ -287,76 +287,75 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 }
 
 -(void)setupCaptionSession {
-    // Setup the capture session.
-    // In general it is not safe to mutate an AVCaptureSession or any of its inputs, outputs, or connections from multiple threads at the same time.
-    // Why not do all of this on the main queue?
-    // Because -[AVCaptureSession startRunning] is a blocking call which can take a long time. We dispatch session setup to the sessionQueue
-    // so that the main queue isn't blocked, which keeps the UI responsive.
+
     dispatch_async( self.sessionQueue, ^{
-        if ( self.setupResult != CKSetupResultSuccess ) {
-            return;
+        @try {
+            if ( self.setupResult != CKSetupResultSuccess ) {
+                        return;
+                    }
+
+                    self.backgroundRecordingID = UIBackgroundTaskInvalid;
+                    NSError *error = nil;
+
+                    AVCaptureDevice *videoDevice = [CKCamera deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];
+                    AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+
+                    [self.session beginConfiguration];
+
+                    if ( [self.session canAddInput:videoDeviceInput] ) {
+                        [self.session addInput:videoDeviceInput];
+                        self.videoDeviceInput = videoDeviceInput;
+                        [CKCamera setFlashMode:self.flashMode forDevice:self.videoDeviceInput.device];
+                    }
+                    else {
+                        self.setupResult = CKSetupResultSessionConfigurationFailed;
+                    }
+
+                    AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
+                    if ( [self.session canAddOutput:movieFileOutput] ) {
+                        [self.session addOutput:movieFileOutput];
+                        AVCaptureConnection *connection = [movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+                        if ( connection.isVideoStabilizationSupported ) {
+                            connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
+                        }
+                        self.movieFileOutput = movieFileOutput;
+                    }
+                    else {
+                        self.setupResult = CKSetupResultSessionConfigurationFailed;
+                    }
+
+                    AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+                    if ( [self.session canAddOutput:stillImageOutput] ) {
+                        stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
+                        [self.session addOutput:stillImageOutput];
+                        self.stillImageOutput = stillImageOutput;
+                    }
+                    else {
+                        self.setupResult = CKSetupResultSessionConfigurationFailed;
+                    }
+
+                    // commented out because of addOutput crash
+            //        if (self.scanBarcode) {//TODO check if qrcode mode is on
+            //            [BarcodeEventEmitter postErrorNotificationWithPayload:@"SCAN BARCODE TRUE"];
+            //            AVCaptureMetadataOutput *metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+
+            //            if ( [self.session canAddOutput:metadataOutput] ) {
+            //                [self registerBarcodeReader];
+            //
+            //                [BarcodeEventEmitter postErrorNotificationWithPayload: [NSString stringWithFormat:@"CA: %@, BR: %@", [self.session canAddOutput:metadataOutput] ? @"YES" : @"NO", self.barcodeRegistered ? @"YES" : @"NO"]];
+            //            }
+
+            //            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
+            //            [self.session addOutput:self.metadataOutput];
+            //            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+            //            [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
+            //        }
+
+                    [self.session commitConfiguration];
+        } @catch (NSException *exception) {
+           self.setupResult = CKSetupResultSessionConfigurationFailed;
+           NSLog( @"setupCaptionSession: %@", exception.reason);
         }
-
-        self.backgroundRecordingID = UIBackgroundTaskInvalid;
-        NSError *error = nil;
-
-        AVCaptureDevice *videoDevice = [CKCamera deviceWithMediaType:AVMediaTypeVideo preferringPosition:AVCaptureDevicePositionBack];
-        AVCaptureDeviceInput *videoDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
-
-        [self.session beginConfiguration];
-
-        if ( [self.session canAddInput:videoDeviceInput] ) {
-            [self.session addInput:videoDeviceInput];
-            self.videoDeviceInput = videoDeviceInput;
-            [CKCamera setFlashMode:self.flashMode forDevice:self.videoDeviceInput.device];
-        }
-        else {
-            self.setupResult = CKSetupResultSessionConfigurationFailed;
-        }
-
-        AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
-        if ( [self.session canAddOutput:movieFileOutput] ) {
-            [self.session addOutput:movieFileOutput];
-            AVCaptureConnection *connection = [movieFileOutput connectionWithMediaType:AVMediaTypeVideo];
-            if ( connection.isVideoStabilizationSupported ) {
-                connection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
-            }
-            self.movieFileOutput = movieFileOutput;
-        }
-        else {
-            self.setupResult = CKSetupResultSessionConfigurationFailed;
-        }
-
-        AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
-        if ( [self.session canAddOutput:stillImageOutput] ) {
-            stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
-            [self.session addOutput:stillImageOutput];
-            self.stillImageOutput = stillImageOutput;
-        }
-        else {
-            self.setupResult = CKSetupResultSessionConfigurationFailed;
-            NSLog( @"setupCaptionSession: %@", exception.reason);
-        }
-
-        // commented out because of addOutput crash
-//        if (self.scanBarcode) {//TODO check if qrcode mode is on
-//            [BarcodeEventEmitter postErrorNotificationWithPayload:@"SCAN BARCODE TRUE"];
-//            AVCaptureMetadataOutput *metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-
-//            if ( [self.session canAddOutput:metadataOutput] ) {
-//                [self registerBarcodeReader];
-//
-//                [BarcodeEventEmitter postErrorNotificationWithPayload: [NSString stringWithFormat:@"CA: %@, BR: %@", [self.session canAddOutput:metadataOutput] ? @"YES" : @"NO", self.barcodeRegistered ? @"YES" : @"NO"]];
-//            }
-
-//            self.metadataOutput = [[AVCaptureMetadataOutput alloc] init];
-//            [self.session addOutput:self.metadataOutput];
-//            [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-//            [self.metadataOutput setMetadataObjectTypes:[self.metadataOutput availableMetadataObjectTypes]];
-//        }
-
-        [self.session commitConfiguration];
-
     } );
 }
 
@@ -639,8 +638,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
                             CGImageRelease(imageRef);
                         } else {
                             //NSLog( @"Could not capture still image: %@", error );
-                        }
-                        else if (block) {
+                        } else if (block) {
                             block(imageInfoDict);
                         }
                     }];
