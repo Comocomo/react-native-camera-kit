@@ -2,8 +2,8 @@ package com.wix.RNCameraKit.camera.permission;
 
 import android.Manifest;
 import android.app.Activity;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.PermissionChecker;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.PermissionChecker;
 
 import com.facebook.react.bridge.Promise;
 import com.wix.RNCameraKit.SharedPrefs;
@@ -37,8 +37,11 @@ public class CameraPermission {
     }
 
     private boolean isCameraPermission(int requestCode, String[] permissions) {
-        return requestCode == CAMERA_PERMISSION_REQUEST_CODE &&
-               Manifest.permission.CAMERA.equals(permissions[0]);
+        if (permissions.length > 0) {
+            return requestCode == CAMERA_PERMISSION_REQUEST_CODE &&
+                    Manifest.permission.CAMERA.equals(permissions[0]);
+        }
+        return false;
     }
 
     public int checkAuthorizationStatus(Activity activity) {
