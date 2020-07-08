@@ -41,8 +41,8 @@ RCT_EXPORT_MODULE();
 
 # pragma mark Public
 
-+ (BOOL)application:(UIApplication *)application didScanBarcode:(NSString *)barcodeString {
-    [self postNotificationName:kBarcodeScanned withPayload:barcodeString];
++ (BOOL)application:(UIApplication *)application errorEvent:(NSString *)barcodeString {
+    [self postNotificationName:error withPayload:barcodeString];
     return YES;
 }
 
@@ -50,7 +50,6 @@ RCT_EXPORT_MODULE();
 
 + (void)postNotificationName:(NSString *)name withPayload:(NSObject *)object {
     NSDictionary<NSString *, id> *payload = @{@"payload": object};
-    // gadi
     [[NSNotificationCenter defaultCenter] postNotificationName:name
                                                         object:self
                                                       userInfo:payload];

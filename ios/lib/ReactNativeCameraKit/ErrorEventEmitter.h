@@ -17,6 +17,6 @@
 
 @interface ErrorEventEmitter : RCTEventEmitter <RCTBridgeModule>
 
-+ (BOOL)application:(UIApplication *)application error:(NSString *)errorString;
++ (BOOL)application:(UIApplication *)application errorEvent:(NSString *)errorString;
 
 @end

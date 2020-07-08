@@ -23,6 +23,7 @@
 
 #import "BarcodeEventEmitter.h"
 
+
 static void * CapturingStillImageContext = &CapturingStillImageContext;
 static void * SessionRunningContext = &SessionRunningContext;
 
@@ -82,7 +83,7 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
 #define CAMERA_OPTION_ON_READ_QR_CODE               @"onReadQRCode"
 #define TIMER_FOCUS_TIME_SECONDS            5
 
-@interface CKCamera () <AVCaptureMetadataOutputObjectsDelegate>
+@interface CKCamera () <AVCaptureFileOutputRecordingDelegate, AVCaptureMetadataOutputObjectsDelegate>
 
 
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;

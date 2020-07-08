@@ -26,7 +26,7 @@ RCT_EXPORT_MODULE()
 - (UIView *)view {
     self.camera = [CKCamera new];
     [self.barcodeEventEmitter startObserving];
-    [self.errorEventEmitter ststartObservingart];
+    [self.errorEventEmitter startObserving];
     return self.camera;
 }
 
