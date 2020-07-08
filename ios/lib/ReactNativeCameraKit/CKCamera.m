@@ -634,15 +634,10 @@ RCT_ENUM_CONVERTER(CKCameraZoomMode, (@{
                                     block(imageInfoDict);
                                 }
                             }];
-
-                            CGImageRelease(imageRef);
                         } else {
                             //NSLog( @"Could not capture still image: %@", error );
-                        } else if (block) {
-                            block(imageInfoDict);
                         }
                     }];
-
                     CGImageRelease(imageRef);
                 } else {
                     //NSLog( @"Could not capture still image: %@", error );
