@@ -1,17 +1,44 @@
-import * as _ from 'lodash';
-import React, {Component} from 'react';
+import * as _ from 'lodash'
+import PropTypes from 'prop-types'
+import React, {Component} from 'react'
 import {
   requireNativeComponent,
   NativeModules,
-  processColor
+  processColor,
+  NativeEventEmitter
 } from 'react-native';
 
 const NativeCamera = requireNativeComponent('CKCamera', null);
 const NativeCameraAction = NativeModules.CKCameraManager;
+const iosErrorEventEmitter = new NativeEventEmitter(NativeModules.ErrorEventEmitter);
+var subscription = null
 
 export default class CameraKitCamera extends React.Component {
-  render() {
+  static propTypes = {
+    onErrorIOS: PropTypes.func,
+  }
 
+  static defaultProps = {
+    onErrorIOS: () => {}
+  }
+  constructor(props){
+    super(props)
+    subscription = iosErrorEventEmitter.addListener(
+      'ErrorEventEmitter/error',
+      this.onErrorIOS.bind(this)
+    )
+  }
+
+  onErrorIOS(error) {
+    this.props.onIOSError(error)
+  }
+
+
+  componentWillUnmount(){
+    subscription.remove()
+  }
+
+  render() {
     const transformedProps = _.cloneDeep(this.props);
     _.update(transformedProps, 'cameraOptions.ratioOverlayColor', (c) => processColor(c));
     return <NativeCamera {...transformedProps}/>
