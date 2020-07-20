@@ -19,7 +19,7 @@ export default class CameraKitCamera extends React.Component {
   }
 
   static defaultProps = {
-    onErrorIOS: () => {}
+    onIOSError: () => {}
   }
   constructor(props){
     super(props)
